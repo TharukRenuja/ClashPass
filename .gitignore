@@ -1,0 +1,19 @@
+# Build output
+/target
+/dist
+clashpass
+clashpass.desktop
+
+# Test data
+/test_data
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
