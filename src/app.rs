@@ -243,7 +243,10 @@ impl eframe::App for PasswordComparerApp {
                 .inner_margin(Margin::symmetric(12, 6))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label(RichText::new(&format!("{} ClashPass", ph::SWORD)).strong().size(16.0).color(ACCENT));
+                        if let Some(logo) = &self.logo {
+                            ui.image((logo.id(), vec2(20.0, 20.0)));
+                        }
+                        ui.label(RichText::new("ClashPass").strong().size(16.0).color(ACCENT));
 
                         ui.separator();
 
