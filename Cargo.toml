@@ -15,6 +15,18 @@ png = "0.17"
 egui-phosphor = "0.13"
 dirs = "6"
 
+[package.metadata.deb]
+maintainer = "Tharuk Renuja <contact.tharukrenuja@gmail.com>"
+copyright = "2026, Tharuk Renuja"
+extended-description = "ClashPass — Password Conflict Resolver: compare password manager exports side-by-side and resolve conflicts"
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/release/clashpass", "usr/bin/clashpass", "755"],
+    ["clashpass.desktop", "usr/share/applications/clashpass.desktop", "644"],
+    ["icons/clashpass_256.png", "usr/share/icons/hicolor/256x256/apps/clashpass.png", "644"],
+]
+
 [profile.release]
 opt-level = "z"
 lto = true

@@ -126,7 +126,7 @@ fn launch_app() -> eframe::Result {
     };
 
     eframe::run_native(
-        APP_DISPLAY_NAME,
+        APP_NAME,
         options,
         Box::new(|cc| Ok(Box::new(app::PasswordComparerApp::new(cc)))),
     )
