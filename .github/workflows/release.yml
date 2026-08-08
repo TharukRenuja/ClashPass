@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  APP_NAME: clashpass
 
 jobs:
   build-linux:
@@ -24,29 +25,31 @@ jobs:
           sudo apt-get install -y libgtk-3-dev
 
       - name: Install cargo tools
-        run: |
-          cargo install cargo-deb
+        run: cargo install cargo-deb
 
       - name: Build
         run: cargo build --release
 
       - name: Strip binary
         run: |
-          objcopy --remove-section=.eh_frame --remove-section=.eh_frame_hdr target/release/clashpass target/release/clashpass.stripped
-          mv target/release/clashpass.stripped target/release/clashpass
+          objcopy --remove-section=.eh_frame --remove-section=.eh_frame_hdr target/release/${{ env.APP_NAME }} target/release/${{ env.APP_NAME }}.stripped
+          mv target/release/${{ env.APP_NAME }}.stripped target/release/${{ env.APP_NAME }}
 
       - name: Package .deb
         run: cargo deb
 
+      - name: Rename .deb
+        run: |
+          mkdir artifacts
+          cp target/debian/*.deb artifacts/${{ env.APP_NAME }}-v${{ github.ref_name }}-linux-amd64.deb
+
       - name: Package tarball
         run: |
-          mkdir -p artifacts/clashpass-${GITHUB_REF_NAME#v}
-          cp target/release/clashpass artifacts/clashpass-${GITHUB_REF_NAME#v}/
-          cp icons/clashpass_256.png artifacts/clashpass-${GITHUB_REF_NAME#v}/clashpass.png
-          cd artifacts && tar czf clashpass-${GITHUB_REF_NAME#v}-linux-x86_64.tar.gz clashpass-${GITHUB_REF_NAME#v}
-
-      - name: Move deb
-        run: cp target/debian/*.deb artifacts/
+          mkdir -p artifacts/${{ env.APP_NAME }}-v${{ github.ref_name }}-linux-amd64
+          cp target/release/${{ env.APP_NAME }} artifacts/${{ env.APP_NAME }}-v${{ github.ref_name }}-linux-amd64/
+          cp icons/clashpass_256.png artifacts/${{ env.APP_NAME }}-v${{ github.ref_name }}-linux-amd64/clashpass.png
+          cd artifacts && tar czf ${{ env.APP_NAME }}-v${{ github.ref_name }}-linux-amd64.tar.gz ${{ env.APP_NAME }}-v${{ github.ref_name }}-linux-amd64
+          rm -rf artifacts/${{ env.APP_NAME }}-v${{ github.ref_name }}-linux-amd64
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -68,7 +71,7 @@ jobs:
       - name: Move Artifacts
         run: |
           mkdir artifacts
-          Copy-Item target/release/clashpass.exe artifacts/clashpass-windows-amd64.exe
+          Copy-Item target/release/${{ env.APP_NAME }}.exe artifacts/${{ env.APP_NAME }}-v${{ github.ref_name }}-windows-amd64.exe
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -80,7 +83,11 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        target: [x86_64-apple-darwin, aarch64-apple-darwin]
+        include:
+          - target: x86_64-apple-darwin
+            arch: amd64
+          - target: aarch64-apple-darwin
+            arch: arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -94,19 +101,14 @@ jobs:
 
       - name: Create .app bundle
         run: |
-          ARCH_NAME="amd64"
-          if [ "${{ matrix.target }}" = "aarch64-apple-darwin" ]; then
-            ARCH_NAME="arm64"
-          fi
-
-          APP_DIR="artifacts/ClashPass.app/Contents"
+          APP_DIR="artifacts/${{ env.APP_NAME }}-${{ github.ref_name }}-macos-${{ matrix.arch }}.app/Contents"
           mkdir -p "$APP_DIR/MacOS"
           mkdir -p "$APP_DIR/Resources"
 
-          cp target/${{ matrix.target }}/release/clashpass "$APP_DIR/MacOS/"
+          cp target/${{ matrix.target }}/release/${{ env.APP_NAME }} "$APP_DIR/MacOS/"
           cp icons/clashpass_256.png "$APP_DIR/Resources/AppIcon.png"
 
-          cat > "$APP_DIR/Info.plist" <<EOF
+          cat > "$APP_DIR/Info.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -118,9 +120,9 @@ jobs:
             <key>CFBundleIdentifier</key>
             <string>com.tharukrenuja.clashpass</string>
             <key>CFBundleVersion</key>
-            <string>${GITHUB_REF_NAME#v}</string>
+            <string>${{ github.ref_name }}</string>
             <key>CFBundleShortVersionString</key>
-            <string>${GITHUB_REF_NAME#v}</string>
+            <string>${{ github.ref_name }}</string>
             <key>CFBundleExecutable</key>
             <string>clashpass</string>
             <key>CFBundlePackageType</key>
@@ -129,10 +131,17 @@ jobs:
             <string>10.15</string>
           </dict>
           </plist>
-          EOF
+          PLIST
           sed -i '' 's/^          //' "$APP_DIR/Info.plist"
 
-          hdiutil create -volname ClashPass -srcfolder artifacts/ClashPass.app -ov -format UDZO artifacts/clashpass-macos-${ARCH_NAME}.dmg
+      - name: Create DMG
+        run: |
+          cd artifacts
+          hdiutil create -volname ClashPass \
+            -srcfolder "${{ env.APP_NAME }}-${{ github.ref_name }}-macos-${{ matrix.arch }}.app" \
+            -ov -format UDZO \
+            "${{ env.APP_NAME }}-${{ github.ref_name }}-macos-${{ matrix.arch }}.dmg"
+          rm -rf "${{ env.APP_NAME }}-${{ github.ref_name }}-macos-${{ matrix.arch }}.app"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -156,6 +165,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          generate_release_notes: true
           files: |
             linux-artifacts/*
             windows-artifacts/*
