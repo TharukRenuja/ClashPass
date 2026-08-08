@@ -226,12 +226,11 @@ impl eframe::App for PasswordComparerApp {
             .into_iter()
             .filter_map(|f| f.path)
             .collect();
+        if !dropped.is_empty() {
+            self.status_message = format!("Dropped {} file(s)", dropped.len());
+        }
         for path in dropped {
-            if let Some(ext) = path.extension() {
-                if ext == "csv" {
-                    self.import_path(path.to_str().unwrap_or(""));
-                }
-            }
+            self.import_path(path.to_str().unwrap_or(""));
         }
 
         ctx.set_style_of(egui::Theme::Dark, egui::Style {

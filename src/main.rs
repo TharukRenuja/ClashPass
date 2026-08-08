@@ -45,6 +45,7 @@ fn local_bin() -> PathBuf {
     home_dir().join(".local/bin")
 }
 
+#[cfg(target_os = "linux")]
 fn is_installed() -> bool {
     desktop_file_path().exists()
 }
