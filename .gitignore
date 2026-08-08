@@ -2,6 +2,7 @@
 /target
 /dist
 clashpass
+clashpass.desktop
 
 # Test data
 /test_data

@@ -36,7 +36,21 @@ jobs:
           mv target/release/${{ env.APP_NAME }}.stripped target/release/${{ env.APP_NAME }}
 
       - name: Package .deb
-        run: cargo deb
+        run: |
+          cat > clashpass.desktop <<EOF
+          [Desktop Entry]
+          Name=clashpass
+          Comment=Password Conflict Resolver
+          Exec=clashpass
+          Icon=clashpass
+          Terminal=false
+          Type=Application
+          Categories=Utility;Security;
+          Keywords=password;manager;conflict;csv;
+          StartupWMClass=clashpass
+          EOF
+          sed -i 's/^          //' clashpass.desktop
+          cargo deb
 
       - name: Rename .deb
         run: |
