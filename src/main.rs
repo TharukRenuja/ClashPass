@@ -62,6 +62,7 @@ fn install() {
     let current_exe = std::env::current_exe().expect("Cannot determine current executable path");
     let dest = bin_dir.join(APP_NAME);
     fs::copy(&current_exe, &dest).expect("Failed to copy binary to ~/.local/bin");
+    #[cfg(unix)]
     fs::set_permissions(&dest, std::os::unix::fs::PermissionsExt::from_mode(0o755)).ok();
 
     // Write .desktop file

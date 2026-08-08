@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=clashpass
+Comment=Password Conflict Resolver
+Exec=clashpass
+Icon=clashpass
+Terminal=false
+Type=Application
+Categories=Utility;Security;
+Keywords=password;manager;conflict;csv;
+StartupWMClass=clashpass
