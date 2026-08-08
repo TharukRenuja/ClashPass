@@ -61,14 +61,15 @@ Toggle **"Show conflicts only"** to focus on mismatches and **"Files"** to manag
 
 ### Linux
 
-Download the latest binary from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest), then:
+Download the tarball from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest), then:
 
 ```bash
-chmod +x clashpass-v*-linux-amd64
-./clashpass-v*-linux-amd64          # Auto-installs to ~/.local/bin/ and adds to start menu
+tar xzf clashpass-v*-linux-amd64.tar.gz
+cd clashpass-v*
+./clashpass          # Auto-installs to ~/.local/bin/ and adds to start menu
 ```
 
-That's it. The binary installs itself — desktop entry, icon, and PATH. After first run, just launch `clashpass` from your app launcher.
+That's it. The binary installs itself on first run — desktop entry, icon, and PATH. After that, just launch `clashpass` from your app launcher.
 
 Other commands:
 ```bash
@@ -97,22 +98,6 @@ cargo build --release
 ./target/release/clashpass
 ```
 
-## Project structure
+## License
 
-```
-ClashPass/
-├── src/
-│   ├── main.rs      # Entry point + self-installer
-│   ├── app.rs       # GUI (egui)
-│   ├── models.rs    # Data structures
-│   ├── parser.rs    # CSV parsing
-│   └── export.rs    # CSV export
-├── icons/
-│   ├── clashpass.svg
-│   ├── clashpass_32.png
-│   ├── clashpass_64.png
-│   └── clashpass_256.png
-├── Cargo.toml
-├── LICENSE          # MIT
-└── README.md
-```
+[MIT License](LICENSE) — Copyright (c) 2026 Tharuk Renuja
