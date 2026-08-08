@@ -38,7 +38,7 @@ jobs:
         run: |
           mkdir -p pkg/tar/clashpass-${GITHUB_REF_NAME#v}
           cp target/release/clashpass pkg/tar/clashpass-${GITHUB_REF_NAME#v}/
-          cp icons/clashpass.png pkg/tar/clashpass-${GITHUB_REF_NAME#v}/
+          cp icons/clashpass_256.png pkg/tar/clashpass-${GITHUB_REF_NAME#v}/clashpass.png
           cp -r test_data pkg/tar/clashpass-${GITHUB_REF_NAME#v}/
           cd pkg/tar && tar czf ../../clashpass-${GITHUB_REF_NAME#v}-linux-x86_64.tar.gz clashpass-${GITHUB_REF_NAME#v}
 
