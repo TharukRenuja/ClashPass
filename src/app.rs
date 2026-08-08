@@ -44,13 +44,14 @@ impl PasswordComparerApp {
     }
 
     fn import_file(&mut self) {
-        let files = rfd::FileDialog::new()
+        let files = native_dialog::DialogBuilder::file()
             .add_filter("CSV", &["csv"])
             .add_filter("All", &["*"])
             .set_title("Select password export CSV file")
-            .pick_file();
+            .open_single_file()
+            .show();
 
-        if let Some(path) = files {
+        if let Ok(Some(path)) = files {
             match parse_csv(path.to_str().unwrap_or("")) {
                 Ok(file) => {
                     let name = file.name.clone();
@@ -139,11 +140,12 @@ impl PasswordComparerApp {
             self.status_message = "No data to export".to_string();
             return;
         }
-        let file = rfd::FileDialog::new()
+        let file = native_dialog::DialogBuilder::file()
             .add_filter("CSV", &["csv"])
             .set_title("Save merged CSV")
-            .save_file();
-        if let Some(path) = file {
+            .save_single_file()
+            .show();
+        if let Ok(Some(path)) = file {
             self.commit_edit();
             match export_to_csv(&self.groups, path.to_str().unwrap_or("")) {
                 Ok(_) => self.status_message = "Exported successfully!".to_string(),
