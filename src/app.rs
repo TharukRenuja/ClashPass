@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use eframe::egui::*;
+use egui_phosphor::regular as ph;
 
 use crate::export::export_to_csv;
 use crate::models::EntryGroup;
@@ -27,10 +28,18 @@ pub struct PasswordComparerApp {
     editing_field: Option<String>,
     editing_entry: Option<usize>,
     edit_buffer: String,
+    show_passwords: bool,
 }
 
 impl PasswordComparerApp {
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Load the Phosphor icon font so icon glyphs actually render instead
+        // of showing up as missing-glyph squares (egui's default font has no
+        // emoji coverage at all).
+        let mut fonts = egui::FontDefinitions::default();
+        egui_phosphor::add_to_fonts(&mut fonts, egui_phosphor::Variant::Regular);
+        cc.egui_ctx.set_fonts(fonts);
+
         Self::default()
     }
 
@@ -186,6 +195,13 @@ impl PasswordComparerApp {
 
 impl eframe::App for PasswordComparerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Force a full repaint every frame. Without this, eframe only redraws
+        // on input events, and a resizable SidePanel can leave a stale,
+        // unrepainted strip of the previous frame's layout on screen (the
+        // black gap next to the entry list) until something else forces a
+        // fresh layout pass.
+        ctx.request_repaint();
+
         ctx.set_style(egui::Style {
             visuals: egui::Visuals {
                 dark_mode: true,
@@ -214,11 +230,11 @@ impl eframe::App for PasswordComparerApp {
                 .inner_margin(Margin::symmetric(12.0, 6.0))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label(RichText::new("⚔ ClashPass").strong().size(16.0).color(ACCENT));
+                        ui.label(RichText::new(&format!("{} ClashPass", ph::SWORD)).strong().size(16.0).color(ACCENT));
 
                         ui.separator();
 
-                        let btn_import = Button::new("📂  Import")
+                        let btn_import = Button::new(&format!("{}  Import", ph::FOLDER_OPEN))
                             .fill(Color32::from_rgb(40, 40, 55))
                             .rounding(Rounding::same(6.0));
                         if ui.add(btn_import).clicked() {
@@ -226,7 +242,7 @@ impl eframe::App for PasswordComparerApp {
                         }
 
                         let can_export = !self.groups.is_empty();
-                        let btn_export = Button::new("💾  Export")
+                        let btn_export = Button::new(&format!("{}  Export", ph::FLOPPY_DISK))
                             .fill(Color32::from_rgb(40, 40, 55))
                             .rounding(Rounding::same(6.0));
                         if ui.add_enabled(can_export, btn_export).clicked() {
@@ -235,12 +251,12 @@ impl eframe::App for PasswordComparerApp {
 
                         ui.separator();
 
-                        ui.toggle_value(&mut self.show_conflicts_only, "🔍  Conflicts only");
+                        ui.toggle_value(&mut self.show_conflicts_only, format!("{}  Conflicts only", ph::MAGNIFYING_GLASS));
 
                         if !self.groups.is_empty() {
                             ui.add(
                                 TextEdit::singleline(&mut self.search_query)
-                                    .hint_text("🔎  Filter entries...")
+                                    .hint_text(format!("{}  Filter entries...", ph::MAGNIFYING_GLASS))
                                     .desired_width(180.0)
                                     .margin(Margin::symmetric(6.0, 2.0)),
                             );
@@ -255,7 +271,7 @@ impl eframe::App for PasswordComparerApp {
                                 );
                             }
                             if !self.files.is_empty() {
-                                let txt = format!("📄 {} file(s)", self.files.len());
+                                let txt = format!("{} {} file(s)", ph::FILE, self.files.len());
                                 Frame::none()
                                     .fill(Color32::from_rgb(40, 40, 55))
                                     .rounding(Rounding::same(12.0))
@@ -277,7 +293,7 @@ impl eframe::App for PasswordComparerApp {
                     .inner_margin(Margin::symmetric(12.0, 4.0))
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui| {
-                            ui.label(RichText::new("📂  Sources:").size(12.0).color(GRAY));
+                            ui.label(RichText::new(&format!("{}  Sources:", ph::FOLDER)).size(12.0).color(GRAY));
                             let mut remove_idx = None;
                             for (i, file) in self.files.iter().enumerate() {
                                 let chip_color = Color32::from_rgb(35, 35, 50);
@@ -295,10 +311,13 @@ impl eframe::App for PasswordComparerApp {
                                                     .size(11.0)
                                                     .color(GRAY),
                                             );
-                                            let close = Button::new("✕")
-                                                .small()
-                                                .fill(Color32::TRANSPARENT);
-                                            if ui.add(close).clicked() {
+                                            let close = ui.add(
+                                                Label::new(
+                                                    RichText::new("x").size(12.0).color(GRAY),
+                                                )
+                                                .sense(Sense::click()),
+                                            );
+                                            if close.clicked() {
                                                 remove_idx = Some(i);
                                             }
                                         });
@@ -318,7 +337,7 @@ impl eframe::App for PasswordComparerApp {
             CentralPanel::default().show(ctx, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.add_space(ui.available_height() * 0.25);
-                    ui.label(RichText::new("⚔ ClashPass").size(36.0).color(ACCENT).strong());
+                    ui.label(RichText::new(&format!("{} ClashPass", ph::SWORD)).size(36.0).color(ACCENT).strong());
                     ui.add_space(8.0);
                     ui.label(
                         RichText::new("Password Conflict Resolver")
@@ -327,7 +346,7 @@ impl eframe::App for PasswordComparerApp {
                     );
                     ui.add_space(24.0);
                     let btn =
-                        Button::new("📂  Import a password export CSV")
+                        Button::new(&format!("{}  Import a password export CSV", ph::FOLDER_OPEN))
                             .min_size(Vec2::new(220.0, 40.0))
                             .fill(Color32::from_rgb(50, 35, 40))
                             .rounding(Rounding::same(8.0));
@@ -349,127 +368,136 @@ impl eframe::App for PasswordComparerApp {
         SidePanel::left("entry_list")
             .resizable(true)
             .default_width(240.0)
-            .min_width(180.0)
+            .min_width(240.0)
+            .max_width(240.0)
             .show(ctx, |ui| {
+                ui.add_space(2.0);
+                ui.label(RichText::new("Entries").strong().size(13.0).color(ACCENT));
+                ui.separator();
+
+                let sel = self.selected_group.min(self.groups.len().saturating_sub(1));
+                let query = self.search_query.to_lowercase();
+                let filtered: Vec<usize> = self
+                    .groups
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, g)| {
+                        if self.show_conflicts_only && !g.has_conflicts() {
+                            return false;
+                        }
+                        if !query.is_empty() {
+                            let matches = g.title.to_lowercase().contains(&query)
+                                || g.username.to_lowercase().contains(&query);
+                            if !matches {
+                                return false;
+                            }
+                        }
+                        true
+                    })
+                    .map(|(i, _)| i)
+                    .collect();
+
                 ui.vertical(|ui| {
-                    ui.add_space(4.0);
-                    ui.label(RichText::new("Entries").strong().size(14.0).color(ACCENT));
-                    ui.separator();
+                    ui.set_min_height(ui.available_height());
 
                     if self.groups.is_empty() {
                         ui.label(RichText::new("No entries found").size(12.0).color(GRAY));
-                        return;
-                    }
-
-                    let sel = self.selected_group.min(self.groups.len().saturating_sub(1));
-                    let query = self.search_query.to_lowercase();
-                    let filtered: Vec<usize> = self
-                        .groups
-                        .iter()
-                        .enumerate()
-                        .filter(|(_, g)| {
-                            if self.show_conflicts_only && !g.has_conflicts() {
-                                return false;
-                            }
-                            if !query.is_empty() {
-                                let matches = g.title.to_lowercase().contains(&query)
-                                    || g.username.to_lowercase().contains(&query);
-                                if !matches {
-                                    return false;
-                                }
-                            }
-                            true
-                        })
-                        .map(|(i, _)| i)
-                        .collect();
-
-                    ScrollArea::vertical()
-                        .id_salt("entry_scroll")
-                        .show(ui, |ui| {
-                            for &gi in &filtered {
-                                let group = &self.groups[gi];
-                                let conflicts = group.has_conflicts();
-                                let resolved = group.resolved_source.is_some();
-                                let is_selected = gi == sel;
-                                let (badge_bg, badge_txt) = Self::status_badge(conflicts, resolved);
-
-                                let card_color = if is_selected {
-                                    CARD_BG_SELECTED
-                                } else {
-                                    CARD_BG
-                                };
-
-                                let card = Frame::none()
-                                    .fill(card_color)
-                                    .rounding(Rounding::same(6.0))
-                                    .stroke(if is_selected {
-                                        Stroke::new(1.5, ACCENT)
-                                    } else {
-                                        Stroke::new(1.0, Color32::from_rgb(40, 40, 55))
-                                    })
-                                    .inner_margin(Margin::symmetric(10.0, 8.0));
-
-                                let resp = card
-                                    .show(ui, |ui| {
-                                        ui.set_min_width(ui.available_width());
-                                        ui.vertical(|ui| {
-                                            ui.horizontal(|ui| {
-                                                ui.label(
-                                                    RichText::new(&group.title)
-                                                        .size(13.0)
-                                                        .strong(),
-                                                );
-                                                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                                    Frame::none()
-                                                        .fill(badge_bg)
-                                                        .rounding(Rounding::same(4.0))
-                                                        .inner_margin(Margin::symmetric(5.0, 2.0))
-                                                        .show(ui, |ui| {
-                                                            ui.label(
-                                                                RichText::new(badge_txt)
-                                                                    .size(10.0)
-                                                                    .color(Color32::WHITE),
-                                                            );
-                                                        });
-                                                });
-                                            });
-                                            if !group.username.is_empty() {
-                                                ui.label(
-                                                    RichText::new(&group.username)
-                                                        .size(11.0)
-                                                        .color(GRAY),
-                                                );
-                                            }
-                                            if conflicts {
-                                                let fields = group.get_conflicting_fields();
-                                                ui.label(
-                                                    RichText::new(format!(
-                                                        "⚠ {} differ{}",
-                                                        fields.len(),
-                                                        if fields.len() == 1 { "s" } else { "" }
-                                                    ))
-                                                    .size(11.0)
-                                                    .color(YELLOW),
-                                                );
-                                            } else if resolved {
-                                                ui.label(
-                                                    RichText::new("✔ Resolved")
-                                                        .size(11.0)
-                                                        .color(GREEN),
-                                                );
-                                            }
-                                        });
-                                    })
-                                    .response;
-
-                                let click_resp = ui.interact(resp.rect, ui.auto_id_with("card_sel"), Sense::click());
-                                if click_resp.clicked() {
-                                    self.commit_edit();
-                                    self.selected_group = gi;
-                                }
-                                ui.add_space(4.0);
-                            }
+                    } else if filtered.is_empty() {
+                        ui.add_space(20.0);
+                        ui.vertical_centered(|ui| {
+                            ui.label(RichText::new("No conflicts found").size(12.0).color(GRAY));
                         });
+                    } else {
+                        ScrollArea::vertical()
+                            .id_salt("entry_scroll")
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| {
+                                for &gi in &filtered {
+                                    let group = &self.groups[gi];
+                                    let conflicts = group.has_conflicts();
+                                    let resolved = group.resolved_source.is_some();
+                                    let is_selected = gi == sel;
+                                    let (badge_bg, badge_txt) = Self::status_badge(conflicts, resolved);
+
+                                    let card_color = if is_selected {
+                                        CARD_BG_SELECTED
+                                    } else {
+                                        CARD_BG
+                                    };
+
+                                    let card = Frame::none()
+                                        .fill(card_color)
+                                        .rounding(Rounding::same(6.0))
+                                        .stroke(if is_selected {
+                                            Stroke::new(1.5f32, ACCENT)
+                                        } else {
+                                            Stroke::new(1.0f32, Color32::from_rgb(40, 40, 55))
+                                        })
+                                        .inner_margin(Margin::symmetric(8.0, 4.0));
+
+                                    let resp = card
+                                        .show(ui, |ui| {
+                                            ui.set_min_width(ui.available_width());
+                                            ui.vertical(|ui| {
+                                                ui.horizontal(|ui| {
+                                                    ui.label(
+                                                        RichText::new(&group.title)
+                                                            .size(12.0)
+                                                            .strong(),
+                                                    );
+                                                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                                                        Frame::none()
+                                                            .fill(badge_bg)
+                                                            .rounding(Rounding::same(4.0))
+                                                            .inner_margin(Margin::symmetric(4.0, 1.0))
+                                                            .show(ui, |ui| {
+                                                                ui.label(
+                                                                    RichText::new(badge_txt)
+                                                                        .size(9.0)
+                                                                        .color(Color32::WHITE),
+                                                                );
+                                                            });
+                                                    });
+                                                });
+                                                if !group.username.is_empty() {
+                                                    ui.label(
+                                                        RichText::new(&group.username)
+                                                            .size(10.0)
+                                                            .color(GRAY),
+                                                    );
+                                                }
+                                                if conflicts {
+                                                    let fields = group.get_conflicting_fields();
+                                                    ui.label(
+                                                        RichText::new(format!(
+                                                            "{} {} differ{}",
+                                                            ph::WARNING,
+                                                            fields.len(),
+                                                            if fields.len() == 1 { "s" } else { "" }
+                                                        ))
+                                                        .size(10.0)
+                                                        .color(YELLOW),
+                                                    );
+                                                } else if resolved {
+                                                    ui.label(
+                                                        RichText::new(&format!("{} Resolved", ph::CHECK))
+                                                            .size(10.0)
+                                                            .color(GREEN),
+                                                    );
+                                                }
+                                            });
+                                        })
+                                        .response;
+
+                                    let click_resp = ui.interact(resp.rect, ui.auto_id_with("card_sel"), Sense::click());
+                                    if click_resp.clicked() {
+                                        self.commit_edit();
+                                        self.selected_group = gi;
+                                    }
+                                    ui.add_space(2.0);
+                                }
+                            });
+                    }
                 });
             });
 
@@ -478,14 +506,13 @@ impl eframe::App for PasswordComparerApp {
             if self.groups.is_empty() {
                 ui.vertical_centered(|ui| {
                     ui.add_space(80.0);
-                    ui.label(RichText::new("📭 No entries found").size(20.0).color(GRAY));
+                    ui.label(RichText::new(&format!("{} No entries found", ph::TRAY)).size(20.0).color(GRAY));
                 });
                 return;
             }
 
             let sel = self.selected_group.min(self.groups.len().saturating_sub(1));
 
-            // Clone group data upfront to avoid borrow conflicts
             let group_title = self.groups[sel].title.clone();
             let group_username = self.groups[sel].username.clone();
             let group_entries: Vec<(usize, crate::models::PasswordEntry)> =
@@ -524,6 +551,7 @@ impl eframe::App for PasswordComparerApp {
             };
 
             // ─── Header ───
+            ui.add_space(4.0);
             ui.horizontal(|ui| {
                 ui.label(RichText::new(&group_title).size(18.0).strong());
                 if !group_username.is_empty() {
@@ -540,29 +568,104 @@ impl eframe::App for PasswordComparerApp {
                         .inner_margin(Margin::symmetric(6.0, 2.0))
                         .show(ui, |ui| {
                             ui.label(
-                                RichText::new("⚠ Conflicts")
+                                RichText::new(&format!("{} Conflicts", ph::WARNING))
                                     .size(11.0)
                                     .strong(),
                             );
                         });
-                } else {
+                } else if group_num_files > 1 {
                     Frame::none()
                         .fill(Color32::from_rgb(30, 60, 40))
                         .rounding(Rounding::same(4.0))
                         .inner_margin(Margin::symmetric(6.0, 2.0))
                         .show(ui, |ui| {
                             ui.label(
-                                RichText::new("✔ Synced")
+                                RichText::new(&format!("{} Synced", ph::CHECK))
                                     .size(11.0)
                                     .strong(),
                             );
                         });
                 }
-            });
-            ui.separator();
 
-            // ─── Comparison Grid ───
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                    if group_num_files > 1 {
+                        let eye_icon = if self.show_passwords { ph::EYE_SLASH } else { ph::EYE };
+                        let toggle_btn = Button::new(format!("{} Passwords", eye_icon))
+                            .fill(Color32::from_rgb(40, 40, 55))
+                            .rounding(Rounding::same(6.0));
+                        if ui.add(toggle_btn).clicked() {
+                            self.show_passwords = !self.show_passwords;
+                        }
+                    }
+                });
+            });
+            ui.add_space(4.0);
+            ui.separator();
+            ui.add_space(4.0);
+
+            // ─── Column Headers ───
+            let header_bg = Color32::from_rgb(24, 24, 36);
+            let cell_h = 28.0;
+            let col_border = Color32::from_rgb(45, 45, 60);
+
+            let total_width = ui.available_width();
+            let field_col_width = total_width * 0.20;
+            let values_area_width = total_width * 0.80;
+            let num_cols = group_entries.len().max(1) as f32;
+            let col_width = (values_area_width - (num_cols - 1.0)) / num_cols;
+
+            // Header row
+            ui.horizontal(|ui| {
+                // Field column header
+                Frame::none()
+                    .fill(header_bg)
+                    .rounding(Rounding::same(6.0))
+                    .inner_margin(Margin::symmetric(8.0, 4.0))
+                    .show(ui, |ui| {
+                        ui.set_min_width(field_col_width);
+                        ui.label(RichText::new("Field").size(11.0).strong().color(GRAY));
+                    });
+
+                ui.add_space(1.0);
+
+                // File column headers
+                for (vi, lbl) in file_labels.iter().enumerate() {
+                    let is_resolved_col = group_has_resolved && {
+                        if let Some((idx, _)) = group_entries.iter().find(|(i, _)| *i == group_resolved_file) {
+                            *idx == vi
+                        } else {
+                            false
+                        }
+                    };
+                    Frame::none()
+                        .fill(header_bg)
+                        .rounding(Rounding::same(6.0))
+                        .stroke(Stroke::new(1.0f32, col_border))
+                        .inner_margin(Margin::symmetric(8.0, 4.0))
+                        .show(ui, |ui| {
+                            ui.set_min_width(col_width);
+                            ui.horizontal(|ui| {
+                                if is_resolved_col {
+                                    ui.label(RichText::new(ph::CHECK).size(11.0).color(GREEN));
+                                }
+                                ui.label(RichText::new(lbl).size(11.0).strong().color(Color32::from_rgb(180, 180, 200)));
+                            });
+                        });
+                }
+            });
+            ui.add_space(4.0);
+
+            // ─── Divider ───
+            let divider_rect = Rect::from_min_size(
+                ui.cursor().min,
+                Vec2::new(ui.available_width(), 1.0),
+            );
+            ui.painter().rect_filled(divider_rect, 0.0, col_border);
+            ui.add_space(2.0);
+
+            // ─── Field Rows ───
             let fields = ["Username", "Password", "URL", "Notes", "Created", "Updated"];
+            let field_icons = [ph::USER, ph::KEY, ph::GLOBE, ph::NOTE_PENCIL, ph::CALENDAR, ph::ARROWS_CLOCKWISE];
             let getters: Vec<fn(&crate::models::PasswordEntry) -> &str> = vec![
                 |e| &e.username,
                 |e| &e.password,
@@ -573,238 +676,239 @@ impl eframe::App for PasswordComparerApp {
             ];
 
             ScrollArea::vertical()
-                .id_salt("comp_table")
+                .id_salt("comp_table_v2")
                 .show(ui, |ui| {
-                    Grid::new("comp_grid")
-                        .striped(false)
-                        .min_col_width(90.0)
-                        .max_col_width(250.0)
-                        .show(ui, |ui| {
-                            // Column headers
-                            Frame::none()
-                                .fill(Color32::from_rgb(30, 30, 45))
-                                .inner_margin(Margin::symmetric(5.0, 3.0))
-                                .show(ui, |ui| {
-                                    ui.strong(RichText::new("Field").size(11.0));
-                                });
-                            for (vi, lbl) in file_labels.iter().enumerate() {
-                                let sep = if vi > 0 {
-                                    Stroke::new(1.0, Color32::from_rgb(50, 50, 65))
-                                } else {
-                                    Stroke::new(0.0, Color32::TRANSPARENT)
-                                };
-                                Frame::none()
-                                    .fill(Color32::from_rgb(30, 30, 45))
-                                    .stroke(sep)
-                                    .inner_margin(Margin::symmetric(6.0, 3.0))
-                                    .show(ui, |ui| {
-                                        ui.strong(RichText::new(lbl).size(11.0));
-                                    });
-                            }
-                            ui.end_row();
+                    for (fi, field) in fields.iter().enumerate() {
+                        let has_conflict = group_conflict_fields.contains(&field.to_string());
+                        let row_bg = if fi % 2 == 0 {
+                            Color32::from_rgb(22, 22, 34)
+                        } else {
+                            Color32::from_rgb(26, 26, 38)
+                        };
+                        let is_password_row = *field == "Password";
 
-                            // Field rows
-                            for (fi, field) in fields.iter().enumerate() {
-                                let has_conflict = group_conflict_fields.contains(&field.to_string());
-                                let row_color = if fi % 2 == 0 {
-                                    Color32::from_rgb(26, 26, 38)
-                                } else {
-                                    Color32::from_rgb(22, 22, 34)
-                                };
+                        // Row container
+                        Frame::none()
+                            .fill(row_bg)
+                            .rounding(Rounding::same(4.0))
+                            .inner_margin(Margin::symmetric(0.0, 3.0))
+                            .show(ui, |ui| {
+                                ui.horizontal(|ui| {
+                                    // Field label — distinct dark bg with right border
+                                    Frame::none()
+                                        .fill(Color32::from_rgb(18, 18, 28))
+                                        .rounding(Rounding::same(4.0))
+                                        .inner_margin(Margin::symmetric(8.0, 2.0))
+                                        .show(ui, |ui| {
+                                            ui.set_min_width(field_col_width);
+                                            ui.label(
+                                                RichText::new(format!("{} {}", field_icons[fi], field))
+                                                    .size(12.0)
+                                                    .strong()
+                                                    .color(Color32::from_rgb(170, 170, 190)),
+                                            );
+                                        });
 
-                                Frame::none()
-                                    .fill(row_color)
-                                    .inner_margin(Margin::symmetric(4.0, 2.0))
-                                    .show(ui, |ui| {
-                                        let icon = match *field {
-                                            "Username" => "👤",
-                                            "Password" => "🔑",
-                                            "URL" => "🌐",
-                                            "Notes" => "📝",
-                                            "Created" => "📅",
-                                            "Updated" => "🔄",
-                                            _ => "",
+                                    // Value cells with column borders
+                                    for (vi, (file_idx, entry)) in group_entries.iter().enumerate() {
+                                        let val = getters[fi](entry);
+                                        let is_selected = group_has_resolved && *file_idx == group_resolved_file;
+                                        let is_resolved_cell = is_selected && has_conflict;
+
+                                        let cell_bg = if is_resolved_cell {
+                                            SELECTED_BG
+                                        } else if has_conflict {
+                                            CONFLICT_BG
+                                        } else {
+                                            Color32::TRANSPARENT
                                         };
-                                        ui.label(
-                                            RichText::new(format!("{} {}", icon, field))
-                                                .size(12.0)
-                                                .strong(),
-                                        );
 
-                                        for (vi, (file_idx, entry)) in
-                                            group_entries.iter().enumerate()
-                                        {
-                                            let val = getters[fi](entry);
-                                            let val_str = if val.is_empty() { "—" } else { val };
-                                            let is_selected = group_has_resolved
-                                                && *file_idx == group_resolved_file;
+                                        // Column border on left side (separates from previous column)
+                                        let col_stroke = if vi > 0 {
+                                            Stroke::new(1.0f32, col_border)
+                                        } else {
+                                            Stroke::new(0.0f32, Color32::TRANSPARENT)
+                                        };
 
-                                            let bg = if has_conflict && is_selected {
-                                                SELECTED_BG
-                                            } else if has_conflict {
-                                                CONFLICT_BG
-                                            } else {
-                                                Color32::TRANSPARENT
-                                            };
+                                        let cell_resp = Frame::none()
+                                            .fill(cell_bg)
+                                            .stroke(col_stroke)
+                                            .inner_margin(Margin::symmetric(8.0, 2.0))
+                                            .show(ui, |ui| {
+                                                ui.set_min_width(col_width);
 
-                                            let sep = if vi > 0 {
-                                                Stroke::new(1.0, Color32::from_rgb(50, 50, 65))
-                                            } else {
-                                                Stroke::new(0.0, Color32::TRANSPARENT)
-                                            };
+                                                let is_editing = self.editing_field.as_deref() == Some(*field)
+                                                    && self.editing_entry == Some(vi);
 
-                                            Frame::none()
-                                                .stroke(sep)
-                                                .inner_margin(Margin::symmetric(6.0, 2.0))
-                                                .show(ui, |ui| {
-                                                    let is_editing = self.editing_field.as_deref() == Some(field)
-                                                        && self.editing_entry == Some(vi);
-
-                                                    if is_editing {
-                                                        let resp = ui.add_sized(
-                                                            Vec2::new(120.0, 22.0),
-                                                            TextEdit::singleline(&mut self.edit_buffer)
-                                                                .font(TextStyle::Monospace)
-                                                                .margin(Margin::symmetric(2.0, 0.0)),
-                                                        );
-                                                        let enter = resp.lost_focus()
-                                                            && ui.input(|i| i.key_pressed(Key::Enter));
-                                                        if enter {
-                                                            self.commit_edit();
-                                                            ui.memory_mut(|mem| mem.surrender_focus(resp.id));
-                                                        }
+                                                if is_editing {
+                                                    let resp = ui.add_sized(
+                                                        Vec2::new(col_width - 20.0, 22.0),
+                                                        TextEdit::singleline(&mut self.edit_buffer)
+                                                            .font(TextStyle::Monospace)
+                                                            .margin(Margin::symmetric(2.0, 0.0)),
+                                                    );
+                                                    let enter = resp.lost_focus()
+                                                        && ui.input(|i| i.key_pressed(Key::Enter));
+                                                    if enter {
+                                                        self.commit_edit();
+                                                        ui.memory_mut(|mem| mem.surrender_focus(resp.id));
+                                                    }
+                                                } else {
+                                                    let display_val = if is_password_row && !self.show_passwords && !val.is_empty() {
+                                                        "••••••••"
+                                                    } else if val.is_empty() {
+                                                        "—"
                                                     } else {
+                                                        val
+                                                    };
+
+                                                    let text_color = if val.is_empty() {
+                                                        GRAY
+                                                    } else if is_resolved_cell {
+                                                        GREEN
+                                                    } else {
+                                                        Color32::from_rgb(210, 210, 220)
+                                                    };
+
+                                                    ui.horizontal(|ui| {
+                                                        // Inline resolve indicator for conflicts
+                                                        if has_conflict && group_num_files > 1 {
+                                                            let indicator = if is_resolved_cell { "●" } else { "○" };
+                                                            let ind_color = if is_resolved_cell { GREEN } else { GRAY };
+                                                            let ind = ui.add(
+                                                                Label::new(RichText::new(indicator).size(14.0).color(ind_color))
+                                                                    .sense(Sense::click()),
+                                                            );
+                                                            if ind.clicked() {
+                                                                self.resolve_group(sel, *file_idx);
+                                                            }
+                                                            ind.on_hover_text(if is_resolved_cell { "Selected" } else { "Click to select" });
+                                                            ui.add_space(4.0);
+                                                        }
+
+                                                        // Conflict accent stripe (painted on left edge)
+                                                        if has_conflict {
+                                                            let stripe_rect = Rect::from_min_size(
+                                                                ui.cursor().min - Vec2::new(8.0, 0.0),
+                                                                Vec2::new(3.0, cell_h - 4.0),
+                                                            );
+                                                            let stripe_color = if is_resolved_cell { GREEN } else { ACCENT };
+                                                            ui.painter().rect_filled(stripe_rect, 1.0, stripe_color);
+                                                        }
+
                                                         let resp = ui.add(
                                                             Label::new(
-                                                                RichText::new(val_str)
-                                                                    .background_color(bg)
-                                                                    .size(12.0),
+                                                                RichText::new(display_val)
+                                                                    .size(12.0)
+                                                                    .color(text_color),
                                                             )
                                                             .sense(Sense::click()),
                                                         );
+
                                                         if has_conflict && resp.clicked() {
                                                             self.resolve_group(sel, *file_idx);
                                                         }
                                                         if has_conflict {
-                                                            resp.on_hover_text("Select this");
+                                                            resp.on_hover_text("Click to select this value");
                                                         }
 
                                                         let editable = matches!(*field, "Username" | "Password" | "URL" | "Notes");
-                                                        if editable {
+                                                        if editable && !val.is_empty() {
                                                             let edit_resp = ui.add(
-                                                                Label::new(RichText::new("✏️").size(13.0))
+                                                                Label::new(RichText::new(ph::PENCIL_SIMPLE).size(13.0).color(GRAY))
                                                                     .sense(Sense::click()),
                                                             )
-                                                            .on_hover_text("Edit");
+                                                            .on_hover_text("Edit value");
                                                             if edit_resp.clicked() {
                                                                 self.begin_edit(field, vi, val);
                                                             }
                                                         }
-                                                    }
-                                                });
-                                        }
-
-                                        if has_conflict && group_num_files > 1 {
-                                            ui.horizontal(|ui| {
-                                                for (vi, (file_idx, _)) in
-                                                    group_entries.iter().enumerate()
-                                                {
-                                                    let selected =
-                                                        group_has_resolved
-                                                            && *file_idx == group_resolved_file;
-                                                    let txt = format!(
-                                                        "{} {}",
-                                                        if selected { "●" } else { "○" },
-                                                        file_labels[vi]
-                                                    );
-                                                    let c = if selected { ACCENT } else { GRAY };
-                                                    let r = ui
-                                                        .selectable_label(
-                                                            selected,
-                                                            RichText::new(txt)
-                                                                .size(10.0)
-                                                                .color(c),
-                                                        );
-                                                    if r.clicked() {
-                                                        self.resolve_group(sel, *file_idx);
-                                                    }
+                                                    });
                                                 }
-                                            });
-                                        } else {
-                                            ui.label("");
-                                        }
-                                    });
-                                ui.end_row();
-                            }
+                                            }).response;
 
-                            // Extra fields collapsible
-                            if let Some(first_entry) =
-                                group_entries.first().map(|(_, e)| e)
-                            {
-                                let standard = [
-                                    "title", "username", "password", "url",
-                                    "notes", "created_at", "updated_at", "created",
-                                    "updated", "login_username", "login_password",
-                                    "login_uri", "login_name", "name", "website",
-                                    "uri", "note", "extra", "grouping", "folder",
-                                    "favorite", "favourite", "fav", "type",
-                                    "fields", "reprompt", "totp", "timecreated",
-                                    "timepasswordchanged", "timelastused",
-                                    "last_modified", "group", "email", "createtime",
-                                    "modifytime", "vault",
-                                ];
-                                let extras: Vec<&String> = first_entry
-                                    .raw
-                                    .keys()
-                                    .filter(|k| !standard.contains(&k.as_str()))
-                                    .collect();
-                                if !extras.is_empty() {
-                                    ui.end_row();
-                                    ui.label("");
-                                    CollapsingHeader::new("📎 Extra fields")
-                                        .default_open(false)
-                                        .show(ui, |ui| {
-                                            for col in &extras {
+                                        // Hover highlight for conflict cells
+                                        let hover_rect = cell_resp.rect;
+                                        if ui.rect_contains_pointer(hover_rect) && has_conflict {
+                                            ui.painter().rect_stroke(
+                                                hover_rect,
+                                                Rounding::same(4.0),
+                                                Stroke::new(1.0f32, Color32::from_rgb(100, 100, 130)),
+                                            );
+                                        }
+                                    }
+                                });
+                            });
+                    }
+
+                    // ─── Extra fields ───
+                    if let Some(first_entry) = group_entries.first().map(|(_, e)| e) {
+                        let standard = [
+                            "title", "username", "password", "url",
+                            "notes", "created_at", "updated_at", "created",
+                            "updated", "login_username", "login_password",
+                            "login_uri", "login_name", "name", "website",
+                            "uri", "note", "extra", "grouping", "folder",
+                            "favorite", "favourite", "fav", "type",
+                            "fields", "reprompt", "totp", "timecreated",
+                            "timepasswordchanged", "timelastused",
+                            "last_modified", "group", "email", "createtime",
+                            "modifytime", "vault",
+                        ];
+                        let extras: Vec<&String> = first_entry
+                            .raw
+                            .keys()
+                            .filter(|k| !standard.contains(&k.as_str()))
+                            .collect();
+                        if !extras.is_empty() {
+                            ui.add_space(8.0);
+                            CollapsingHeader::new(format!("{} Extra fields ({})", ph::PAPERCLIP, extras.len()))
+                                .default_open(false)
+                                .show(ui, |ui| {
+                                    for col in &extras {
+                                        Frame::none()
+                                            .fill(Color32::from_rgb(22, 22, 34))
+                                            .rounding(Rounding::same(3.0))
+                                            .inner_margin(Margin::symmetric(6.0, 3.0))
+                                            .show(ui, |ui| {
                                                 ui.horizontal(|ui| {
-                                                    ui.label(
-                                                        RichText::new(col.as_str())
-                                                            .italics()
-                                                            .size(11.0)
-                                                            .color(GRAY),
-                                                    );
-                                                    for (_fi, e) in
-                                                        &group_entries
-                                                    {
-                                                        let v = e
-                                                            .raw
-                                                            .get(col.as_str())
-                                                            .cloned()
-                                                            .unwrap_or_default();
-                                                        let v = if v.is_empty() {
-                                                            "—"
-                                                        } else {
-                                                            &v
-                                                        };
+                                                    ui.allocate_ui(Vec2::new(140.0, 20.0), |ui| {
                                                         ui.label(
-                                                            RichText::new(v)
-                                                                .size(11.0),
+                                                            RichText::new(col.as_str())
+                                                                .italics()
+                                                                .size(11.0)
+                                                                .color(GRAY),
                                                         );
+                                                    });
+                                                    for (_fi, e) in &group_entries {
+                                                        let v = e.raw.get(col.as_str()).cloned().unwrap_or_default();
+                                                        let display = if v.is_empty() { "—" } else { &v };
+                                                        ui.label(RichText::new(display).size(11.0));
                                                     }
                                                 });
-                                            }
-                                        });
-                                }
-                            }
-                        });
+                                            });
+                                    }
+                                });
+                        }
+                    }
                 });
 
+            // ─── Resolved footer ───
             if group_has_resolved && group_num_files > 1 {
+                ui.add_space(8.0);
+                ui.separator();
+                ui.add_space(4.0);
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new("Resolved from ").size(11.0).color(GRAY));
-                    if let Some((_, _)) = group_entries.iter().find(|(i, _)| *i == group_resolved_file) {
-                        ui.label(RichText::new(&file_labels[group_entries.iter().position(|(i, _)| *i == group_resolved_file).unwrap_or(0)]).size(11.0).strong().color(GREEN));
+                    ui.label(RichText::new("Resolved from").size(11.0).color(GRAY));
+                    if let Some(pos) = group_entries.iter().position(|(i, _)| *i == group_resolved_file) {
+                        ui.label(
+                            RichText::new(&file_labels[pos])
+                                .size(11.0)
+                                .strong()
+                                .color(GREEN),
+                        );
                     }
-                    if ui.button(RichText::new("✕").size(11.0).color(GRAY)).clicked() {
+                    if ui.button(RichText::new("Clear").size(11.0).color(GRAY)).clicked() {
                         self.groups[sel].resolved_source = None;
                     }
                 });
