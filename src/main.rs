@@ -119,10 +119,11 @@ fn uninstall() {
 fn launch_app() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("ClashPass — Password Conflict Resolver")
+            .with_title("ClashPass: Password Conflict Resolver")
             .with_inner_size([1200.0, 700.0])
             .with_min_inner_size([800.0, 500.0])
-            .with_icon(load_icon()),
+            .with_icon(load_icon())
+            .with_drag_and_drop(true),
         ..Default::default()
     };
 
