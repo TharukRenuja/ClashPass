@@ -1,58 +1,25 @@
-# ClashPass ⚔️
+# ClashPass
 
-**Password Conflict Resolver** — import CSV exports from multiple password managers, compare entries side-by-side, resolve conflicts, and export a clean unified list.
+**Password Conflict Resolver**: Import CSV exports from multiple password managers, compare entries side-by-side, resolve conflicts, and export a clean unified list.
 
 ## Features
 
 - **Import** CSV from Bitwarden, LastPass, 1Password, Proton Pass, Chrome, Firefox, and any standard password export
 - **Auto-match** entries by title + email/username across files
 - **Side-by-side** comparison with conflict highlighting (red = mismatched)
-- **Click to resolve** — pick which version to keep per group
+- **Click to resolve**, pick which version to keep per group
 - **Export** merged conflict-free CSV
-- **Dark theme** native desktop app, single binary, zero runtime deps
-
-## Install
-
-### Debian / Ubuntu
-```bash
-sudo dpkg -i dist/clashpass_0.1.0_amd64.deb
-clashpass
-```
-
-### Portable tarball
-```bash
-tar xzf dist/clashpass-v0.1.0-linux-x86_64.tar.gz
-cd clashpass-v0.1.0
-./clashpass
-```
-
-### Build from source
-```bash
-git clone https://github.com/TharukRenuja/ClashPass.git
-cd ClashPass
-./build.sh          # handles noexec filesystems
-# or just:
-cargo run --release
-```
+- **Dark theme** native desktop app, single binary, minimal runtime deps
 
 ## Usage
 
-1. Click **📂 Import CSV** to load exported password files
+1. Click **Import CSV** to load exported password files
 2. Entries are auto-grouped by title + email/username
 3. Conflicts (different passwords, URLs, dates) highlighted in **red**
 4. **Click** any conflicting value or use **"Keep entry from"** buttons to pick
-5. Click **💾 Export CSV** to save the merged, conflict-free list
+5. Click **Export CSV** to save the merged, conflict-free list
 
 Toggle **"Show conflicts only"** to focus on mismatches and **"Files"** to manage loaded sources.
-
-## Build from source
-
-Requires [Rust](https://rustup.rs/) (1.75+).
-
-```bash
-cargo build --release
-./target/release/clashpass
-```
 
 ## Supported formats
 
@@ -65,12 +32,46 @@ cargo build --release
 | Chrome      | name, url, username, password                            |
 | Generic     | title/name, username/email, password, url/website, notes |
 
+## Install
+
+### Linux
+
+Download the latest binary from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest), then:
+
+```bash
+chmod +x clashpass
+./clashpass          # Auto-installs to ~/.local/bin/ and adds to start menu
+```
+
+That's it. The binary installs itself — desktop entry, icon, and PATH. After first run, just launch `clashpass` from your app launcher.
+
+Other commands:
+```bash
+./clashpass --install     # Manual reinstall
+./clashpass --uninstall   # Remove binary, desktop entry, and icon
+```
+
+### Windows / macOS
+
+Download the latest binary from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest) and run it.
+
+### Build from source
+
+Requires [Rust](https://rustup.rs/) (1.75+).
+
+```bash
+git clone https://github.com/TharukRenuja/ClashPass.git
+cd ClashPass
+cargo build --release
+./target/release/clashpass
+```
+
 ## Project structure
 
 ```
 ClashPass/
 ├── src/
-│   ├── main.rs      # Entry point + icon
+│   ├── main.rs      # Entry point + self-installer
 │   ├── app.rs       # GUI (egui)
 │   ├── models.rs    # Data structures
 │   ├── parser.rs    # CSV parsing
@@ -80,12 +81,7 @@ ClashPass/
 │   ├── clashpass_32.png
 │   ├── clashpass_64.png
 │   └── clashpass_256.png
-├── test_data/       # Sample CSV exports
-├── dist/            # Release packages
 ├── Cargo.toml
+├── LICENSE          # AGPL-3.0
 └── README.md
 ```
-
-## License
-
-MIT
