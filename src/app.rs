@@ -194,19 +194,13 @@ impl PasswordComparerApp {
 }
 
 impl eframe::App for PasswordComparerApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Force a full repaint every frame. Without this, eframe only redraws
-        // on input events, and a resizable SidePanel can leave a stale,
-        // unrepainted strip of the previous frame's layout on screen (the
-        // black gap next to the entry list) until something else forces a
-        // fresh layout pass.
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = ui.ctx();
         ctx.request_repaint();
 
-        ctx.set_style(egui::Style {
+        ctx.set_style_of(egui::Theme::Dark, egui::Style {
             visuals: egui::Visuals {
                 dark_mode: true,
-                window_rounding: Rounding::same(8.0),
-                menu_rounding: Rounding::same(6.0),
                 panel_fill: SURFACE,
                 faint_bg_color: CARD_BG,
                 extreme_bg_color: SURFACE,
@@ -224,10 +218,10 @@ impl eframe::App for PasswordComparerApp {
         });
 
         // ═══════════════════ TOOLBAR ═══════════════════
-        TopBottomPanel::top("toolbar").show(ctx, |ui| {
-            Frame::none()
+        Panel::top("toolbar").show(ui, |ui| {
+            Frame::new()
                 .fill(SURFACE)
-                .inner_margin(Margin::symmetric(12.0, 6.0))
+                .inner_margin(Margin::symmetric(12, 6))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.label(RichText::new(&format!("{} ClashPass", ph::SWORD)).strong().size(16.0).color(ACCENT));
@@ -235,16 +229,14 @@ impl eframe::App for PasswordComparerApp {
                         ui.separator();
 
                         let btn_import = Button::new(&format!("{}  Import", ph::FOLDER_OPEN))
-                            .fill(Color32::from_rgb(40, 40, 55))
-                            .rounding(Rounding::same(6.0));
+                            .fill(Color32::from_rgb(40, 40, 55));
                         if ui.add(btn_import).clicked() {
                             self.import_file();
                         }
 
                         let can_export = !self.groups.is_empty();
                         let btn_export = Button::new(&format!("{}  Export", ph::FLOPPY_DISK))
-                            .fill(Color32::from_rgb(40, 40, 55))
-                            .rounding(Rounding::same(6.0));
+                            .fill(Color32::from_rgb(40, 40, 55));
                         if ui.add_enabled(can_export, btn_export).clicked() {
                             self.export_csv();
                         }
@@ -258,7 +250,7 @@ impl eframe::App for PasswordComparerApp {
                                 TextEdit::singleline(&mut self.search_query)
                                     .hint_text(format!("{}  Filter entries...", ph::MAGNIFYING_GLASS))
                                     .desired_width(180.0)
-                                    .margin(Margin::symmetric(6.0, 2.0)),
+                                    .margin(Margin::symmetric(6, 2)),
                             );
                         }
 
@@ -272,10 +264,10 @@ impl eframe::App for PasswordComparerApp {
                             }
                             if !self.files.is_empty() {
                                 let txt = format!("{} {} file(s)", ph::FILE, self.files.len());
-                                Frame::none()
+                                Frame::new()
                                     .fill(Color32::from_rgb(40, 40, 55))
-                                    .rounding(Rounding::same(12.0))
-                                    .inner_margin(Margin::symmetric(8.0, 3.0))
+                                    .corner_radius(CornerRadius::same(12))
+                                    .inner_margin(Margin::symmetric(8, 3))
                                     .show(ui, |ui| {
                                         ui.label(RichText::new(txt).size(12.0).color(GRAY));
                                     });
@@ -287,20 +279,20 @@ impl eframe::App for PasswordComparerApp {
 
         // ═══════════════════ FILE CHIPS ═══════════════════
         if !self.files.is_empty() {
-            TopBottomPanel::top("file_chips").show(ctx, |ui| {
-                Frame::none()
+            Panel::top("file_chips").show(ui, |ui| {
+                Frame::new()
                     .fill(Color32::from_rgb(16, 16, 26))
-                    .inner_margin(Margin::symmetric(12.0, 4.0))
+                    .inner_margin(Margin::symmetric(12, 4))
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui| {
                             ui.label(RichText::new(&format!("{}  Sources:", ph::FOLDER)).size(12.0).color(GRAY));
                             let mut remove_idx = None;
                             for (i, file) in self.files.iter().enumerate() {
                                 let chip_color = Color32::from_rgb(35, 35, 50);
-                                let resp = Frame::none()
+                                let resp = Frame::new()
                                     .fill(chip_color)
-                                    .rounding(Rounding::same(14.0))
-                                    .inner_margin(Margin::symmetric(8.0, 3.0))
+                                    .corner_radius(CornerRadius::same(14))
+                                    .inner_margin(Margin::symmetric(8, 3))
                                     .show(ui, |ui| {
                                         ui.horizontal(|ui| {
                                             ui.label(
@@ -334,7 +326,7 @@ impl eframe::App for PasswordComparerApp {
 
         // ═══════════════════ EMPTY STATE ═══════════════════
         if self.files.is_empty() {
-            CentralPanel::default().show(ctx, |ui| {
+            CentralPanel::default().show(ui, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.add_space(ui.available_height() * 0.25);
                     ui.label(RichText::new(&format!("{} ClashPass", ph::SWORD)).size(36.0).color(ACCENT).strong());
@@ -348,8 +340,7 @@ impl eframe::App for PasswordComparerApp {
                     let btn =
                         Button::new(&format!("{}  Import a password export CSV", ph::FOLDER_OPEN))
                             .min_size(Vec2::new(220.0, 40.0))
-                            .fill(Color32::from_rgb(50, 35, 40))
-                            .rounding(Rounding::same(8.0));
+                            .fill(Color32::from_rgb(50, 35, 40));
                     if ui.add(btn).clicked() {
                         self.import_file();
                     }
@@ -365,12 +356,12 @@ impl eframe::App for PasswordComparerApp {
         }
 
         // ═══════════════════ SIDE PANEL: Entry List ═══════════════════
-        SidePanel::left("entry_list")
+        Panel::left("entry_list")
             .resizable(true)
-            .default_width(240.0)
-            .min_width(240.0)
-            .max_width(240.0)
-            .show(ctx, |ui| {
+            .default_size(240.0)
+            .min_size(200.0)
+            .max_size(350.0)
+            .show(ui, |ui| {
                 ui.add_space(2.0);
                 ui.label(RichText::new("Entries").strong().size(13.0).color(ACCENT));
                 ui.separator();
@@ -398,8 +389,6 @@ impl eframe::App for PasswordComparerApp {
                     .collect();
 
                 ui.vertical(|ui| {
-                    ui.set_min_height(ui.available_height());
-
                     if self.groups.is_empty() {
                         ui.label(RichText::new("No entries found").size(12.0).color(GRAY));
                     } else if filtered.is_empty() {
@@ -411,6 +400,7 @@ impl eframe::App for PasswordComparerApp {
                         ScrollArea::vertical()
                             .id_salt("entry_scroll")
                             .auto_shrink([false, false])
+                            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
                             .show(ui, |ui| {
                                 for &gi in &filtered {
                                     let group = &self.groups[gi];
@@ -425,19 +415,18 @@ impl eframe::App for PasswordComparerApp {
                                         CARD_BG
                                     };
 
-                                    let card = Frame::none()
+                                    let card = Frame::new()
                                         .fill(card_color)
-                                        .rounding(Rounding::same(6.0))
+                                        .corner_radius(CornerRadius::same(6))
                                         .stroke(if is_selected {
                                             Stroke::new(1.5f32, ACCENT)
                                         } else {
                                             Stroke::new(1.0f32, Color32::from_rgb(40, 40, 55))
                                         })
-                                        .inner_margin(Margin::symmetric(8.0, 4.0));
+                                        .inner_margin(Margin::symmetric(8, 4));
 
                                     let resp = card
                                         .show(ui, |ui| {
-                                            ui.set_min_width(ui.available_width());
                                             ui.vertical(|ui| {
                                                 ui.horizontal(|ui| {
                                                     ui.label(
@@ -446,10 +435,10 @@ impl eframe::App for PasswordComparerApp {
                                                             .strong(),
                                                     );
                                                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                                        Frame::none()
+                                                        Frame::new()
                                                             .fill(badge_bg)
-                                                            .rounding(Rounding::same(4.0))
-                                                            .inner_margin(Margin::symmetric(4.0, 1.0))
+                                                            .corner_radius(CornerRadius::same(4))
+                                                            .inner_margin(Margin::symmetric(4, 1))
                                                             .show(ui, |ui| {
                                                                 ui.label(
                                                                     RichText::new(badge_txt)
@@ -494,7 +483,6 @@ impl eframe::App for PasswordComparerApp {
                                         self.commit_edit();
                                         self.selected_group = gi;
                                     }
-                                    ui.add_space(2.0);
                                 }
                             });
                     }
@@ -502,7 +490,7 @@ impl eframe::App for PasswordComparerApp {
             });
 
         // ═══════════════════ COMPARISON TABLE ═══════════════════
-        CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show(ui, |ui| {
             if self.groups.is_empty() {
                 ui.vertical_centered(|ui| {
                     ui.add_space(80.0);
@@ -562,10 +550,10 @@ impl eframe::App for PasswordComparerApp {
                     );
                 }
                 if group_conflicts {
-                    Frame::none()
+                    Frame::new()
                         .fill(Color32::from_rgb(80, 30, 30))
-                        .rounding(Rounding::same(4.0))
-                        .inner_margin(Margin::symmetric(6.0, 2.0))
+                        .corner_radius(CornerRadius::same(4))
+                        .inner_margin(Margin::symmetric(6, 2))
                         .show(ui, |ui| {
                             ui.label(
                                 RichText::new(&format!("{} Conflicts", ph::WARNING))
@@ -574,10 +562,10 @@ impl eframe::App for PasswordComparerApp {
                             );
                         });
                 } else if group_num_files > 1 {
-                    Frame::none()
+                    Frame::new()
                         .fill(Color32::from_rgb(30, 60, 40))
-                        .rounding(Rounding::same(4.0))
-                        .inner_margin(Margin::symmetric(6.0, 2.0))
+                        .corner_radius(CornerRadius::same(4))
+                        .inner_margin(Margin::symmetric(6, 2))
                         .show(ui, |ui| {
                             ui.label(
                                 RichText::new(&format!("{} Synced", ph::CHECK))
@@ -591,8 +579,7 @@ impl eframe::App for PasswordComparerApp {
                     if group_num_files > 1 {
                         let eye_icon = if self.show_passwords { ph::EYE_SLASH } else { ph::EYE };
                         let toggle_btn = Button::new(format!("{} Passwords", eye_icon))
-                            .fill(Color32::from_rgb(40, 40, 55))
-                            .rounding(Rounding::same(6.0));
+                            .fill(Color32::from_rgb(40, 40, 55));
                         if ui.add(toggle_btn).clicked() {
                             self.show_passwords = !self.show_passwords;
                         }
@@ -609,18 +596,18 @@ impl eframe::App for PasswordComparerApp {
             let col_border = Color32::from_rgb(45, 45, 60);
 
             let total_width = ui.available_width();
-            let field_col_width = total_width * 0.20;
-            let values_area_width = total_width * 0.80;
+            let field_col_width = total_width * 0.10;
+            let values_area_width = total_width * 0.90;
             let num_cols = group_entries.len().max(1) as f32;
             let col_width = (values_area_width - (num_cols - 1.0)) / num_cols;
 
             // Header row
             ui.horizontal(|ui| {
                 // Field column header
-                Frame::none()
+                Frame::new()
                     .fill(header_bg)
-                    .rounding(Rounding::same(6.0))
-                    .inner_margin(Margin::symmetric(8.0, 4.0))
+                    .corner_radius(CornerRadius::same(6))
+                    .inner_margin(Margin::symmetric(8, 4))
                     .show(ui, |ui| {
                         ui.set_min_width(field_col_width);
                         ui.label(RichText::new("Field").size(11.0).strong().color(GRAY));
@@ -637,11 +624,11 @@ impl eframe::App for PasswordComparerApp {
                             false
                         }
                     };
-                    Frame::none()
+                    Frame::new()
                         .fill(header_bg)
-                        .rounding(Rounding::same(6.0))
+                        .corner_radius(CornerRadius::same(6))
                         .stroke(Stroke::new(1.0f32, col_border))
-                        .inner_margin(Margin::symmetric(8.0, 4.0))
+                        .inner_margin(Margin::symmetric(8, 4))
                         .show(ui, |ui| {
                             ui.set_min_width(col_width);
                             ui.horizontal(|ui| {
@@ -688,17 +675,17 @@ impl eframe::App for PasswordComparerApp {
                         let is_password_row = *field == "Password";
 
                         // Row container
-                        Frame::none()
+                        Frame::new()
                             .fill(row_bg)
-                            .rounding(Rounding::same(4.0))
-                            .inner_margin(Margin::symmetric(0.0, 3.0))
+                            .corner_radius(CornerRadius::same(4))
+                            .inner_margin(Margin::symmetric(0, 3))
                             .show(ui, |ui| {
                                 ui.horizontal(|ui| {
                                     // Field label — distinct dark bg with right border
-                                    Frame::none()
+                                    Frame::new()
                                         .fill(Color32::from_rgb(18, 18, 28))
-                                        .rounding(Rounding::same(4.0))
-                                        .inner_margin(Margin::symmetric(8.0, 2.0))
+                                        .corner_radius(CornerRadius::same(4))
+                                        .inner_margin(Margin::symmetric(8, 2))
                                         .show(ui, |ui| {
                                             ui.set_min_width(field_col_width);
                                             ui.label(
@@ -730,10 +717,10 @@ impl eframe::App for PasswordComparerApp {
                                             Stroke::new(0.0f32, Color32::TRANSPARENT)
                                         };
 
-                                        let cell_resp = Frame::none()
+                                        let cell_resp = Frame::new()
                                             .fill(cell_bg)
                                             .stroke(col_stroke)
-                                            .inner_margin(Margin::symmetric(8.0, 2.0))
+                                            .inner_margin(Margin::symmetric(8, 2))
                                             .show(ui, |ui| {
                                                 ui.set_min_width(col_width);
 
@@ -745,7 +732,7 @@ impl eframe::App for PasswordComparerApp {
                                                         Vec2::new(col_width - 20.0, 22.0),
                                                         TextEdit::singleline(&mut self.edit_buffer)
                                                             .font(TextStyle::Monospace)
-                                                            .margin(Margin::symmetric(2.0, 0.0)),
+                                                            .margin(Margin::symmetric(2, 0)),
                                                     );
                                                     let enter = resp.lost_focus()
                                                         && ui.input(|i| i.key_pressed(Key::Enter));
@@ -832,8 +819,9 @@ impl eframe::App for PasswordComparerApp {
                                         if ui.rect_contains_pointer(hover_rect) && has_conflict {
                                             ui.painter().rect_stroke(
                                                 hover_rect,
-                                                Rounding::same(4.0),
+                                                CornerRadius::same(4),
                                                 Stroke::new(1.0f32, Color32::from_rgb(100, 100, 130)),
+                                                StrokeKind::Inside,
                                             );
                                         }
                                     }
@@ -866,10 +854,10 @@ impl eframe::App for PasswordComparerApp {
                                 .default_open(false)
                                 .show(ui, |ui| {
                                     for col in &extras {
-                                        Frame::none()
+                                        Frame::new()
                                             .fill(Color32::from_rgb(22, 22, 34))
-                                            .rounding(Rounding::same(3.0))
-                                            .inner_margin(Margin::symmetric(6.0, 3.0))
+                                            .corner_radius(CornerRadius::same(3))
+                                            .inner_margin(Margin::symmetric(6, 3))
                                             .show(ui, |ui| {
                                                 ui.horizontal(|ui| {
                                                     ui.allocate_ui(Vec2::new(140.0, 20.0), |ui| {
