@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Tharuk Renuja <contact.tharukrenuja@gmail.com>"]
 description = "ClashPass — Password Conflict Resolver: compare password manager exports side-by-side and resolve conflicts"
+license = "MIT"
 
 [dependencies]
 eframe = { version = "0.35", default-features = false, features = ["glow", "default_fonts", "wayland", "x11"] }

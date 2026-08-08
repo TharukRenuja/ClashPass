@@ -1,6 +1,31 @@
-# ClashPass
+<p align="center">
+  <img src="icons/clashpass_256.png" width="128" alt="ClashPass Logo">
+</p>
 
-**Password Conflict Resolver**: Import CSV exports from multiple password managers, compare entries side-by-side, resolve conflicts, and export a clean unified list.
+<h1 align="center">ClashPass</h1>
+
+<p align="center">
+  <strong>Password Conflict Resolver</strong><br>
+  Import CSV exports from multiple password managers, compare entries side-by-side, resolve conflicts, and export a clean unified list.
+</p>
+
+<p align="center">
+  <a href="https://github.com/TharukRenuja/ClashPass/releases/latest">
+    <img src="https://img.shields.io/github/v/release/TharukRenuja/ClashPass?style=flat-square&color=blue" alt="Version">
+  </a>
+  <a href="https://github.com/TharukRenuja/ClashPass/releases/latest">
+    <img src="https://img.shields.io/github/repo-size/TharukRenuja/ClashPass?style=flat-square" alt="Repo Size">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
+  </a>
+  <a href="https://github.com/TharukRenuja/ClashPass/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/TharukRenuja/ClashPass/release.yml?style=flat-square&label=build" alt="Build">
+  </a>
+  <img src="https://img.shields.io/badge/platform-linux%20%7C%20windows%20%7C%20macos-lightgrey?style=flat-square" alt="Platform">
+</p>
+
+---
 
 ## Features
 
@@ -39,8 +64,8 @@ Toggle **"Show conflicts only"** to focus on mismatches and **"Files"** to manag
 Download the latest binary from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest), then:
 
 ```bash
-chmod +x clashpass
-./clashpass          # Auto-installs to ~/.local/bin/ and adds to start menu
+chmod +x clashpass-v*-linux-amd64
+./clashpass-v*-linux-amd64          # Auto-installs to ~/.local/bin/ and adds to start menu
 ```
 
 That's it. The binary installs itself — desktop entry, icon, and PATH. After first run, just launch `clashpass` from your app launcher.
@@ -51,9 +76,15 @@ Other commands:
 ./clashpass --uninstall   # Remove binary, desktop entry, and icon
 ```
 
-### Windows / macOS
+### Windows
 
-Download the latest binary from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest) and run it.
+Download `clashpass-v*-windows-amd64.exe` from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest) and run it.
+
+### macOS
+
+Download `clashpass-v*-macos-*.dmg` from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest), open the DMG, and drag to Applications.
+
+Or use the portable `.app` bundle — no install needed.
 
 ### Build from source
 
@@ -82,6 +113,6 @@ ClashPass/
 │   ├── clashpass_64.png
 │   └── clashpass_256.png
 ├── Cargo.toml
-├── LICENSE          # AGPL-3.0
+├── LICENSE          # MIT
 └── README.md
 ```

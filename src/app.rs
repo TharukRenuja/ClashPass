@@ -29,6 +29,7 @@ pub struct PasswordComparerApp {
     editing_entry: Option<usize>,
     edit_buffer: String,
     show_passwords: bool,
+    logo: Option<TextureHandle>,
 }
 
 impl PasswordComparerApp {
@@ -40,7 +41,23 @@ impl PasswordComparerApp {
         egui_phosphor::add_to_fonts(&mut fonts, egui_phosphor::Variant::Regular);
         cc.egui_ctx.set_fonts(fonts);
 
-        Self::default()
+        // Load logo
+        let logo_bytes = include_bytes!("../icons/clashpass_256.png");
+        let decoder = png::Decoder::new(std::io::Cursor::new(logo_bytes));
+        let mut reader = decoder.read_info().expect("Failed to decode logo PNG");
+        let mut buf = vec![0u8; reader.output_buffer_size()];
+        let info = reader.next_frame(&mut buf).expect("Failed to read logo frame");
+        buf.truncate(info.buffer_size());
+        let image = ColorImage::from_rgba_unmultiplied(
+            [info.width as usize, info.height as usize],
+            &buf,
+        );
+        let logo = cc.egui_ctx.load_texture("logo", image, TextureOptions::LINEAR);
+
+        Self {
+            logo: Some(logo),
+            ..Default::default()
+        }
     }
 
     fn import_file(&mut self) {
@@ -331,7 +348,11 @@ impl eframe::App for PasswordComparerApp {
             CentralPanel::default().show(ui, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.add_space(ui.available_height() * 0.25);
-                    ui.label(RichText::new(&format!("{} ClashPass", ph::SWORD)).size(36.0).color(ACCENT).strong());
+                    if let Some(logo) = &self.logo {
+                        ui.image((logo.id(), vec2(128.0, 128.0)));
+                    }
+                    ui.add_space(16.0);
+                    ui.label(RichText::new("ClashPass").size(36.0).color(ACCENT).strong());
                     ui.add_space(8.0);
                     ui.label(
                         RichText::new("Password Conflict Resolver")
@@ -543,6 +564,9 @@ impl eframe::App for PasswordComparerApp {
             // ─── Header ───
             ui.add_space(4.0);
             ui.horizontal(|ui| {
+                if let Some(logo) = &self.logo {
+                    ui.image((logo.id(), vec2(24.0, 24.0)));
+                }
                 ui.label(RichText::new(&group_title).size(18.0).strong());
                 if !group_username.is_empty() {
                     ui.label(
