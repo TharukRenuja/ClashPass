@@ -179,10 +179,11 @@ function renderEntryList() {
 }
 
 function renderComparison() {
-  const panel = $('#compare-panel');
-  if (groups.length === 0) { panel.innerHTML = '<div class="empty-compare">No entries</div>'; return; }
+  const headerEl = $('#compare-header');
+  const bodyEl = $('#compare-body');
+  if (groups.length === 0) { headerEl.innerHTML = ''; bodyEl.innerHTML = '<div class="empty-compare">No entries</div>'; return; }
   const g = groups[selectedGroup];
-  if (!g) { panel.innerHTML = '<div class="empty-compare">No entries</div>'; return; }
+  if (!g) { headerEl.innerHTML = ''; bodyEl.innerHTML = '<div class="empty-compare">No entries</div>'; return; }
 
   const conflicts = g.has_conflicts;
   const resolved = g.resolved_source !== null;
@@ -201,32 +202,36 @@ function renderComparison() {
   const firstEntry = g.entries[0]?.[1];
   const extras = firstEntry ? Object.keys(firstEntry.raw || {}).filter(k => !stdKeys.has(k)) : [];
 
-  let h = '';
-
-  // Header
-  h += `<div class="compare-header"><h2>${esc(g.title)}</h2>`;
-  if (g.username) h += `<span class="username">(${esc(g.username)})</span>`;
-  if (conflicts) h += `<span class="badge badge-conflicts">⚠ Conflicts</span>`;
-  else if (numFiles > 1) h += `<span class="badge badge-synced">✓ Synced</span>`;
-  h += `<div class="right">`;
+  // Static header
+  let hh = `<div class="compare-header-content"><h2>${esc(g.title)}</h2>`;
+  if (g.username) hh += `<span class="username">(${esc(g.username)})</span>`;
+  if (conflicts) hh += `<span class="badge badge-conflicts">⚠ Conflicts</span>`;
+  else if (numFiles > 1) hh += `<span class="badge badge-synced">✓ Synced</span>`;
+  hh += `<div class="right">`;
   if (numFiles > 1) {
-    h += `<button class="btn" id="toggle-pw" title="P">${icon(showPasswords ? 'eye-off' : 'eye')} Passwords</button>`;
+    hh += `<button class="btn" id="toggle-pw" title="P">${icon(showPasswords ? 'eye-off' : 'eye')} Passwords</button>`;
     if (cf.size > 0) {
-      h += `<button class="btn" id="toggle-fields" title="T">${showAllFields ? icon('filter') + ' Diff only' : icon('list') + ' All fields'}</button>`;
+      hh += `<button class="btn" id="toggle-fields" title="T">${showAllFields ? icon('filter') + ' Diff only' : icon('list') + ' All fields'}</button>`;
     }
   }
-  h += `</div></div>`;
+  hh += `</div></div>`;
+  headerEl.innerHTML = hh;
 
-  // Grid
+  // Scrollable body
+  let h = '';
   h += `<div class="compare-grid">`;
   g.entries.forEach(([fileIdx, entry], gi) => {
     const isRes = resolved && gi === g.resolved_source;
     const isSelBox = isRes && conflicts;
-    let boxCls = 'entry-box' + (isSelBox ? ' resolved-selected' : '');
+    const isDimmed = resolved && !isRes;
+    let boxCls = 'entry-box';
+    if (isSelBox) boxCls += ' resolved-selected';
+    if (isDimmed) boxCls += ' dimmed';
 
     h += `<div class="${boxCls}">`;
     h += `<div class="entry-box-header">`;
     if (isSelBox) h += icon('check', 'check-icon');
+    if (isDimmed) h += `<span style="color:var(--text-dim);font-size:11px;margin-right:4px">not chosen</span>`;
     h += `<span class="${FILE_COLORS[fileIdx % FILE_COLORS.length]}" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px"></span>`;
     h += `${esc(fileLabels[gi])}</div>`;
 
@@ -292,7 +297,7 @@ function renderComparison() {
     h += `<div class="resolved-footer"><span>Resolved from</span><span class="resolved-source">${esc(rl)}</span><button class="clear-btn" id="clear-resolve">Clear</button></div>`;
   }
 
-  panel.innerHTML = h;
+  bodyEl.innerHTML = h;
   refreshIcons();
   bindCompareEvents();
 }
