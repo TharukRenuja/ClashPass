@@ -13,10 +13,10 @@
 
   <!-- Toolbar -->
   <header class="toolbar">
-    <span class="app-title">ClashPass</span>
+    <span class="app-title"><span style="color:#e53935">Clash</span><span style="color:var(--text)">Pass</span></span>
     <div class="toolbar-sep"></div>
-    <button class="btn" id="btn-import" title="Ctrl+O"><i class="ph ph-folder-open"></i> Import</button>
-    <button class="btn" id="btn-export" disabled title="Ctrl+S"><i class="ph ph-floppy-disk"></i> Export</button>
+    <button class="btn" id="btn-import" title="Ctrl+O"><i data-lucide="folder-open"></i> Import</button>
+    <button class="btn" id="btn-export" disabled title="Ctrl+S"><i data-lucide="save"></i> Export</button>
     <div class="toolbar-sep"></div>
     <label class="toggle-label">
       <input type="checkbox" id="conflicts-only">
@@ -38,9 +38,9 @@
   <div class="empty-state" id="empty-state">
     <div class="drop-zone" id="drop-zone">
       <img src="icon.png" alt="ClashPass" class="logo">
-      <h1>ClashPass</h1>
+      <h1><span style="color:#e53935">Clash</span><span style="color:var(--text)">Pass</span></h1>
       <p class="subtitle">Password Conflict Resolver</p>
-      <button class="btn btn-primary" id="btn-import-empty"><i class="ph ph-folder-open"></i> Import CSV</button>
+      <button class="btn btn-primary" id="btn-import-empty"><i data-lucide="folder-open"></i> Import CSV</button>
       <p class="drop-hint">or drag & drop files here</p>
       <p class="supported">Bitwarden · LastPass · 1Password · Proton Pass · Chrome · Firefox</p>
     </div>
@@ -56,7 +56,9 @@
     <div class="compare-panel" id="compare-panel">
       <div class="compare-header" id="compare-header"></div>
       <div class="compare-body" id="compare-body"></div>
+      <div class="resolved-footer" id="resolved-footer" style="display:none"></div>
     </div>
+    <div class="bottom-bar"></div>
   </div>
 
   <script type="module" src="app.js"></script>

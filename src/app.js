@@ -93,6 +93,12 @@ $('#btn-import-empty').addEventListener('click', pickFiles);
 $('#btn-export').addEventListener('click', handleExport);
 $('#conflicts-only').addEventListener('change', (e) => { showConflictsOnly = e.target.checked; renderEntryList(); });
 $('#search').addEventListener('input', (e) => { searchQuery = e.target.value; renderEntryList(); });
+$('#entry-list').addEventListener('click', (e) => {
+  const card = e.target.closest('.entry-card');
+  if (card) {
+    selectEntry(+card.dataset.groupIndex);
+  }
+});
 
 listen('tauri://drag-drop', async (event) => {
   const paths = event.payload.paths.filter(p => p.endsWith('.csv'));
@@ -172,10 +178,22 @@ function renderEntryList() {
     else if (g.resolved_source !== null) info = `<div class="entry-card-info entry-card-resolved">✓ Resolved</div>`;
     const card = document.createElement('div');
     card.className = 'entry-card' + (isSel ? ' selected' : '');
+    card.dataset.groupIndex = String(i);
     card.innerHTML = `<div class="entry-card-header"><span class="entry-card-title">${esc(g.title)}</span><span class="badge ${bCls}">${bTxt}</span></div>${g.username ? `<div class="entry-card-user">${esc(g.username)}</div>` : ''}${info}`;
-    card.addEventListener('click', () => { selectedGroup = i; editingCell = null; renderEntryList(); renderComparison(); });
     el.appendChild(card);
   });
+}
+
+function selectEntry(idx) {
+  if (idx === selectedGroup) return;
+  selectedGroup = idx;
+  editingCell = null;
+  const el = $('#entry-list');
+  const cards = el.querySelectorAll('.entry-card');
+  cards.forEach(c => {
+    c.classList.toggle('selected', +c.dataset.groupIndex === selectedGroup);
+  });
+  renderComparison();
 }
 
 function renderComparison() {
@@ -290,14 +308,20 @@ function renderComparison() {
     h += `</div>`;
   }
 
-  // Resolved footer
+  bodyEl.innerHTML = h;
+
+  // Resolved footer in separate fixed div
+  const footerEl = $('#resolved-footer');
   if (resolved && numFiles > 1) {
     const ri = g.entries.findIndex(([i]) => i === g.resolved_source);
     const rl = ri >= 0 ? fileLabels[ri] : '';
-    h += `<div class="resolved-footer"><span>Resolved from</span><span class="resolved-source">${esc(rl)}</span><button class="clear-btn" id="clear-resolve">${icon('x-circle')} Clear</button></div>`;
+    footerEl.innerHTML = `<span>Resolved from</span><span class="resolved-source">${esc(rl)}</span><button class="clear-btn" id="clear-resolve">${icon('x-circle')} Clear</button>`;
+    footerEl.style.display = '';
+  } else {
+    footerEl.innerHTML = '';
+    footerEl.style.display = 'none';
   }
 
-  bodyEl.innerHTML = h;
   refreshIcons();
   bindCompareEvents();
 }
@@ -376,3 +400,5 @@ function bindCompareEvents() {
     renderEntryList(); renderComparison();
   });
 }
+
+lucide.createIcons();
