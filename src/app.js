@@ -297,11 +297,14 @@ function renderComparison() {
   if (g.username) html += `<span class="username">(${esc(g.username)})</span>`;
   if (conflicts) html += `<span class="badge badge-conflicts">⚠ Conflicts</span>`;
   else if (numFiles > 1) html += `<span class="badge badge-synced">✓ Synced</span>`;
-  html += `<div class="right">`;
-  if (numFiles > 1) {
-    html += `<button class="btn" id="toggle-pw" title="Press P"><i class="ph ${showPasswords ? 'ph-eye-slash' : 'ph-eye'}"></i></button>`;
-    html += `<button class="btn" id="toggle-fields" title="Press T">${showAllFields ? '◆ All fields' : '◇ Diff only'}</button>`;
-  }
+    html += `<div class="right">`;
+    if (numFiles > 1) {
+      html += `<button class="btn" id="toggle-pw" title="Press P"><i class="ph ${showPasswords ? 'ph-eye-slash' : 'ph-eye'}"></i> Passwords</button>`;
+      const hasConflictsForToggle = conflictingFields.size > 0;
+      if (hasConflictsForToggle) {
+        html += `<button class="btn" id="toggle-fields" title="Press T">${showAllFields ? '◇ Show diff only' : '◆ Show all fields'}</button>`;
+      }
+    }
   html += `</div></div>`;
 
   // Grid
@@ -321,7 +324,7 @@ function renderComparison() {
     html += `<span class="${chipColor}" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px"></span>`;
     html += `${esc(fileLabels[globalIdx])}</div>`;
 
-    const fieldsToShow = showAllFields ? FIELDS : FIELDS.filter(f => conflictingFields.has(f));
+    const fieldsToShow = (showAllFields || conflictingFields.size === 0) ? FIELDS : FIELDS.filter(f => conflictingFields.has(f));
 
     fieldsToShow.forEach(field => {
       const val = entry[field.toLowerCase().replace(' ', '_')] || '';
