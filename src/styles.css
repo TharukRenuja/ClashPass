@@ -100,6 +100,7 @@ html, body {
 }
 .btn:hover { background: #2e2e44; border-color: #3a3a50; }
 .btn:disabled { opacity: 0.35; cursor: default; }
+.btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 .btn-primary {
   background: #2a1a20;
   border-color: var(--accent-dim);
@@ -293,8 +294,8 @@ html, body {
 /* ─── Compare Grid ─── */
 .compare-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
 }
 
 /* ─── Entry Box ─── */
@@ -310,25 +311,25 @@ html, body {
 }
 
 .entry-box-header {
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: var(--header-bg);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #9999b0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   border-bottom: 1px solid var(--card-border);
 }
-.entry-box-header .check-icon { color: var(--green); }
+.entry-box-header .check-icon { color: var(--green); width: 14px; height: 14px; }
 
 /* ─── Field Rows ─── */
 .field-row {
   display: flex;
   align-items: center;
-  padding: 5px 12px;
-  font-size: 11px;
-  gap: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  gap: 10px;
   border-left: 3px solid transparent;
   transition: background var(--transition), border-color var(--transition);
 }
@@ -347,12 +348,13 @@ html, body {
 .field-label {
   color: var(--gray);
   white-space: nowrap;
-  min-width: 90px;
+  min-width: 100px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: 6px;
+  font-size: 12px;
 }
+.field-label svg { width: 13px; height: 13px; flex-shrink: 0; }
 .field-value {
   flex: 1;
   text-align: right;
@@ -369,11 +371,11 @@ html, body {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 .field-edit input {
   flex: 1;
-  padding: 3px 8px;
+  padding: 5px 10px;
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--accent);
@@ -382,33 +384,44 @@ html, body {
   font-size: 12px;
   outline: none;
 }
-.field-edit .btn { padding: 2px 6px; font-size: 11px; }
+.field-edit .btn { padding: 4px 8px; font-size: 11px; gap: 3px; }
+.field-edit .btn svg { width: 12px; height: 12px; }
 
-.edit-icon {
+.edit-icon-btn {
+  background: none;
+  border: none;
   color: var(--text-dim);
   cursor: pointer;
-  font-size: 11px;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
   opacity: 0;
   transition: opacity var(--transition), color var(--transition);
+  flex-shrink: 0;
 }
-.field-row:hover .edit-icon { opacity: 1; }
-.edit-icon:hover { color: var(--text); }
+.field-row:hover .edit-icon-btn { opacity: 0.6; }
+.edit-icon-btn:hover { opacity: 1 !important; color: var(--accent); }
+.edit-icon-btn svg { width: 13px; height: 13px; }
 
 .keep-btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: calc(100% - 24px);
   margin: 10px 12px;
-  padding: 7px;
+  padding: 8px;
   background: transparent;
   color: var(--green);
   border: 1px solid var(--green-dim);
   border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   text-align: center;
   transition: background var(--transition), border-color var(--transition);
 }
+.keep-btn svg { width: 14px; height: 14px; }
 .keep-btn:hover { background: rgba(92,184,112,0.1); border-color: var(--green); }
 
 /* ─── Extra Fields ─── */
@@ -417,7 +430,7 @@ html, body {
   align-items: center;
   gap: 6px;
   margin-top: 14px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 6px;
@@ -426,6 +439,7 @@ html, body {
   color: var(--gray);
   transition: background var(--transition);
 }
+.extra-fields-toggle svg { width: 14px; height: 14px; }
 .extra-fields-toggle:hover { background: var(--card-selected); }
 .extra-fields-content {
   margin-top: 4px;
