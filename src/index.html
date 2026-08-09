@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClashPass</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular.css">
+</head>
+<body>
+  <!-- Toolbar -->
+  <header class="toolbar">
+    <span class="app-title">ClashPass</span>
+    <div class="toolbar-sep"></div>
+    <button class="btn" id="btn-import"><i class="ph ph-folder-open"></i> Import</button>
+    <button class="btn" id="btn-export" disabled><i class="ph ph-floppy-disk"></i> Export</button>
+    <div class="toolbar-sep"></div>
+    <label class="toggle-label">
+      <input type="checkbox" id="conflicts-only">
+      <i class="ph ph-magnifying-glass"></i> Conflicts only
+    </label>
+    <input type="text" id="search" class="search-input" placeholder="Filter entries..." style="display:none">
+    <div class="toolbar-right">
+      <span class="status-msg" id="status-msg"></span>
+      <span class="file-badge" id="file-badge" style="display:none"></span>
+    </div>
+  </header>
+
+  <!-- File Chips -->
+  <div class="file-chips" id="file-chips" style="display:none">
+    <span class="chip-label"><i class="ph ph-folder"></i> Sources:</span>
+    <div class="chip-list" id="chip-list"></div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" id="empty-state">
+    <img src="../icons/clashpass_256.png" alt="ClashPass" class="logo" onerror="this.style.display='none'">
+    <h1>ClashPass</h1>
+    <p class="subtitle">Password Conflict Resolver</p>
+    <button class="btn btn-primary" id="btn-import-empty"><i class="ph ph-folder-open"></i> Import a password export CSV</button>
+    <p class="supported">Supports Bitwarden · LastPass · 1Password · Proton Pass · Chrome · Firefox · more</p>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main-layout" id="main-layout" style="display:none">
+    <!-- Sidebar: Entry List -->
+    <aside class="sidebar" id="sidebar">
+      <h3 class="sidebar-title">Entries</h3>
+      <div class="entry-list" id="entry-list"></div>
+    </aside>
+
+    <!-- Resize Handle -->
+    <div class="resize-handle" id="resize-handle"></div>
+
+    <!-- Comparison Panel -->
+    <main class="compare-panel" id="compare-panel">
+      <!-- Populated by JS -->
+    </main>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="file-input" accept=".csv" multiple style="display:none">
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
