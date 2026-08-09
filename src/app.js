@@ -82,7 +82,7 @@ async function importFiles(paths) {
 async function handleExport() {
   if (groups.length === 0) return;
   try {
-    const path = await save({ title: 'Save merged CSV', filters: [{ name: 'CSV', extensions: ['csv'] }] });
+    const path = await save({ title: 'Save merged CSV', defaultPath: 'resolved-passwords.csv', filters: [{ name: 'CSV', extensions: ['csv'] }] });
     if (path) { await invoke('export_csv', { path }); toast('Exported!', 'success'); }
   } catch (err) { toast(err, 'error'); }
 }
@@ -294,7 +294,7 @@ function renderComparison() {
   if (resolved && numFiles > 1) {
     const ri = g.entries.findIndex(([i]) => i === g.resolved_source);
     const rl = ri >= 0 ? fileLabels[ri] : '';
-    h += `<div class="resolved-footer"><span>Resolved from</span><span class="resolved-source">${esc(rl)}</span><button class="clear-btn" id="clear-resolve">Clear</button></div>`;
+    h += `<div class="resolved-footer"><span>Resolved from</span><span class="resolved-source">${esc(rl)}</span><button class="clear-btn" id="clear-resolve">${icon('x-circle')} Clear</button></div>`;
   }
 
   bodyEl.innerHTML = h;

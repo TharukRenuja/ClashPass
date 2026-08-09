@@ -1,4 +1,21 @@
-target/
+# Build output
+/target
+/dist
 node_modules/
-dist/
-*.lock
+
+# Tauri
+src-tauri/target/
+
+# Test data
+/test_data
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
