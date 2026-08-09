@@ -1,4 +1,3 @@
-// ─── Tauri API ───
 const { invoke } = window.__TAURI__.core;
 const { open, save } = window.__TAURI__.dialog;
 const { listen } = window.__TAURI__.event;
@@ -11,47 +10,63 @@ let showConflictsOnly = false;
 let searchQuery = '';
 let showPasswords = false;
 let editingCell = null;
+let showAllFields = true;
 
 const FIELDS = ['Username', 'Password', 'URL', 'Notes', 'Created', 'Updated'];
 const FIELD_ICONS = {
-  Username: 'ph-user',
-  Password: 'ph-key',
-  URL: 'ph-globe',
-  Notes: 'ph-note-pencil',
-  Created: 'ph-calendar',
-  Updated: 'ph-arrows-clockwise',
+  Username: 'ph-user', Password: 'ph-key', URL: 'ph-globe',
+  Notes: 'ph-note-pencil', Created: 'ph-calendar', Updated: 'ph-arrows-clockwise',
 };
+const FILE_COLORS = ['chip-0', 'chip-1', 'chip-2', 'chip-3'];
 
 // ─── DOM ───
 const $ = (s) => document.querySelector(s);
-const btnImport = $('#btn-import');
-const btnImportEmpty = $('#btn-import-empty');
-const btnExport = $('#btn-export');
-const conflictsOnly = $('#conflicts-only');
-const searchInput = $('#search');
 const statusMsg = $('#status-msg');
-const fileBadge = $('#file-badge');
-const fileChips = $('#file-chips');
-const chipList = $('#chip-list');
-const emptyState = $('#empty-state');
-const mainLayout = $('#main-layout');
-const entryList = $('#entry-list');
-const comparePanel = $('#compare-panel');
 
-// ─── File Import via Tauri Dialog ───
+// ─── Toast ───
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+  el.textContent = msg;
+  $('#toast-container').appendChild(el);
+  setTimeout(() => { el.classList.add('fade-out'); }, 2500);
+  setTimeout(() => el.remove(), 2800);
+}
+
+// ─── Helpers ───
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function getConflictingFields(group) {
+  if (!group.has_conflicts || group.entries.length < 2) return new Set();
+  const base = group.entries[0][1];
+  const conflicting = new Set();
+  FIELDS.forEach(field => {
+    const key = field.toLowerCase().replace(' ', '_');
+    const baseVal = base[key] || '';
+    for (let i = 1; i < group.entries.length; i++) {
+      if ((group.entries[i][1][key] || '') !== baseVal) {
+        conflicting.add(field);
+        break;
+      }
+    }
+  });
+  return conflicting;
+}
+
+// ─── File Import ───
 async function pickFiles() {
   try {
-    const selected = await open({
-      multiple: true,
-      filters: [{ name: 'CSV', extensions: ['csv'] }],
-    });
+    const selected = await open({ multiple: true, filters: [{ name: 'CSV', extensions: ['csv'] }] });
     if (selected) {
       const paths = Array.isArray(selected) ? selected : [selected];
       if (paths.length > 0) await importFiles(paths);
     }
-  } catch (err) {
-    statusMsg.textContent = 'Error: ' + err;
-  }
+  } catch (err) { toast('Error: ' + err, 'error'); }
 }
 
 async function importFiles(paths) {
@@ -61,89 +76,125 @@ async function importFiles(paths) {
     groups = await invoke('get_groups');
     selectedGroup = 0;
     const count = files.reduce((s, f) => s + f.entries.length, 0);
-    const names = files.map(f => f.name).join(', ');
-    statusMsg.textContent = `Loaded ${names} (${count} entries)`;
+    toast(`Loaded ${files.length} file(s) — ${count} entries`, 'success');
     updateView();
-  } catch (err) {
-    statusMsg.textContent = 'Error: ' + err;
-  }
+  } catch (err) { toast('Error: ' + err, 'error'); }
 }
 
 async function handleExport() {
   if (groups.length === 0) return;
   try {
-    const path = await save({
-      title: 'Save merged CSV',
-      filters: [{ name: 'CSV', extensions: ['csv'] }],
-    });
+    const path = await save({ title: 'Save merged CSV', filters: [{ name: 'CSV', extensions: ['csv'] }] });
     if (path) {
       await invoke('export_csv', { path });
-      statusMsg.textContent = 'Exported successfully!';
+      toast('Exported successfully!', 'success');
     }
-  } catch (err) {
-    statusMsg.textContent = 'Export error: ' + err;
-  }
+  } catch (err) { toast('Export error: ' + err, 'error'); }
 }
 
-// ─── Events ───
-btnImport.addEventListener('click', pickFiles);
-btnImportEmpty.addEventListener('click', pickFiles);
-btnExport.addEventListener('click', handleExport);
-conflictsOnly.addEventListener('change', () => {
-  showConflictsOnly = conflictsOnly.checked;
+// ─── Event Bindings ───
+$('#btn-import').addEventListener('click', pickFiles);
+$('#btn-import-empty').addEventListener('click', pickFiles);
+$('#btn-export').addEventListener('click', handleExport);
+$('#conflicts-only').addEventListener('change', (e) => {
+  showConflictsOnly = e.target.checked;
   renderEntryList();
 });
-searchInput.addEventListener('input', (e) => {
+$('#search').addEventListener('input', (e) => {
   searchQuery = e.target.value;
   renderEntryList();
 });
 
-// Drag and drop via Tauri events
 listen('tauri://drag-drop', async (event) => {
   const paths = event.payload.paths.filter(p => p.endsWith('.csv'));
-  if (paths.length > 0) {
-    await importFiles(paths);
+  if (paths.length > 0) await importFiles(paths);
+});
+
+// Drop zone visual feedback
+const dropZone = $('#drop-zone');
+let dragCounter = 0;
+document.addEventListener('dragenter', (e) => { e.preventDefault(); dragCounter++; if (dropZone) dropZone.classList.add('drag-over'); });
+document.addEventListener('dragleave', (e) => { e.preventDefault(); dragCounter--; if (dragCounter <= 0) { dragCounter = 0; if (dropZone) dropZone.classList.remove('drag-over'); } });
+document.addEventListener('dragover', (e) => e.preventDefault());
+document.addEventListener('drop', () => { dragCounter = 0; if (dropZone) dropZone.classList.remove('drag-over'); });
+
+// Resize handle
+let isResizing = false;
+$('#resize-handle').addEventListener('mousedown', () => {
+  isResizing = true;
+  const onMove = (e) => {
+    if (!isResizing) return;
+    $('#sidebar').style.width = Math.min(350, Math.max(200, e.clientX)) + 'px';
+  };
+  const onUp = () => { isResizing = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+
+  if ((e.ctrlKey || e.metaKey) && e.key === 'o') { e.preventDefault(); pickFiles(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); handleExport(); return; }
+
+  if (groups.length === 0) return;
+  const filtered = getFilteredIndices();
+
+  if (e.key === 'ArrowDown' || e.key === 'j') {
+    e.preventDefault();
+    const curIdx = filtered.indexOf(selectedGroup);
+    if (curIdx < filtered.length - 1) { selectedGroup = filtered[curIdx + 1]; editingCell = null; renderEntryList(); renderComparison(); }
+  }
+  if (e.key === 'ArrowUp' || e.key === 'k') {
+    e.preventDefault();
+    const curIdx = filtered.indexOf(selectedGroup);
+    if (curIdx > 0) { selectedGroup = filtered[curIdx - 1]; editingCell = null; renderEntryList(); renderComparison(); }
+  }
+  if (e.key === 'p') {
+    e.preventDefault();
+    showPasswords = !showPasswords;
+    renderComparison();
+  }
+  if (e.key === 't') {
+    e.preventDefault();
+    showAllFields = !showAllFields;
+    renderComparison();
   }
 });
 
-// Resize handle
-const resizeHandle = $('#resize-handle');
-const sidebar = $('#sidebar');
-let isResizing = false;
-resizeHandle.addEventListener('mousedown', () => {
-  isResizing = true;
-  document.addEventListener('mousemove', onResize);
-  document.addEventListener('mouseup', () => {
-    isResizing = false;
-    document.removeEventListener('mousemove', onResize);
-  }, { once: true });
-});
-function onResize(e) {
-  if (!isResizing) return;
-  const w = Math.min(350, Math.max(200, e.clientX));
-  sidebar.style.width = w + 'px';
+function getFilteredIndices() {
+  const q = searchQuery.toLowerCase();
+  return groups.map((g, i) => ({ g, i }))
+    .filter(({ g }) => {
+      if (showConflictsOnly && !g.has_conflicts) return false;
+      if (q && !g.title.toLowerCase().includes(q) && !g.username.toLowerCase().includes(q)) return false;
+      return true;
+    })
+    .map(({ i }) => i);
 }
 
-// ─── View Updates ───
+// ─── Rendering ───
 function updateView() {
-  const hasFiles = files.length > 0;
-  emptyState.style.display = hasFiles ? 'none' : 'flex';
-  mainLayout.style.display = hasFiles ? 'flex' : 'none';
-  btnExport.disabled = !hasFiles;
-  fileBadge.style.display = hasFiles ? '' : 'none';
-  fileBadge.textContent = `${files.length} file(s)`;
-  fileChips.style.display = hasFiles ? '' : 'none';
-  searchInput.style.display = hasFiles ? '' : 'none';
+  const has = files.length > 0;
+  $('#empty-state').style.display = has ? 'none' : 'flex';
+  $('#main-layout').style.display = has ? 'flex' : 'none';
+  $('#btn-export').disabled = !has;
+  $('#file-badge').style.display = has ? '' : 'none';
+  $('#file-badge').textContent = `${files.length} file(s)`;
+  $('#file-chips').style.display = has ? '' : 'none';
+  $('#search').style.display = has ? '' : 'none';
   renderChips();
   renderEntryList();
   renderComparison();
 }
 
 function renderChips() {
-  chipList.innerHTML = '';
+  const list = $('#chip-list');
+  list.innerHTML = '';
   files.forEach((file, i) => {
     const chip = document.createElement('div');
-    chip.className = 'chip';
+    chip.className = 'chip ' + FILE_COLORS[i % FILE_COLORS.length];
     chip.innerHTML = `
       <span class="chip-name">${esc(file.name)}</span>
       <span class="chip-count">(${file.entries.length})</span>
@@ -154,83 +205,72 @@ function renderChips() {
       files = await invoke('get_files');
       groups = await invoke('get_groups');
       if (selectedGroup >= groups.length) selectedGroup = Math.max(0, groups.length - 1);
-      statusMsg.textContent = `Removed file`;
+      toast('Removed file', 'info');
       updateView();
     });
-    chipList.appendChild(chip);
+    list.appendChild(chip);
   });
 }
 
 function renderEntryList() {
-  entryList.innerHTML = '';
-  const query = searchQuery.toLowerCase();
-  const filtered = groups
-    .map((g, i) => ({ g, i }))
-    .filter(({ g }) => {
-      if (showConflictsOnly && !g.has_conflicts) return false;
-      if (query && !g.title.toLowerCase().includes(query) && !g.username.toLowerCase().includes(query)) return false;
-      return true;
-    });
+  const el = $('#entry-list');
+  el.innerHTML = '';
+  const filtered = getFilteredIndices();
 
   if (filtered.length === 0) {
-    entryList.innerHTML = '<p style="padding:20px;color:var(--gray);font-size:12px;text-align:center">No entries found</p>';
+    el.innerHTML = '<p style="padding:20px;color:var(--gray);font-size:12px;text-align:center">No entries</p>';
     return;
   }
 
-  filtered.forEach(({ g, i }) => {
+  filtered.forEach(i => {
+    const g = groups[i];
     const conflicts = g.has_conflicts;
     const resolved = g.resolved_source !== null;
-    const isSelected = i === selectedGroup;
+    const isSel = i === selectedGroup;
 
     const card = document.createElement('div');
-    card.className = 'entry-card' + (isSelected ? ' selected' : '');
+    card.className = 'entry-card' + (isSel ? ' selected' : '');
 
-    let badgeClass = 'badge-synced';
-    let badgeText = 'Synced';
-    if (resolved) { badgeClass = 'badge-resolved'; badgeText = 'Resolved'; }
-    else if (conflicts) { badgeClass = 'badge-conflicts'; badgeText = 'Conflicts'; }
+    let badgeCls = 'badge-synced', badgeTxt = 'Synced';
+    if (resolved) { badgeCls = 'badge-resolved'; badgeTxt = 'Resolved'; }
+    else if (conflicts) { badgeCls = 'badge-conflicts'; badgeTxt = 'Conflicts'; }
 
     let info = '';
     if (conflicts) {
-      const count = g.conflict_count || 0;
-      info = `<div class="entry-card-conflicts">⚠ ${count} differ${count !== 1 ? 's' : ''}</div>`;
+      const n = g.conflict_count || 0;
+      info = `<div class="entry-card-info entry-card-conflicts">⚠ ${n} differ${n !== 1 ? 's' : ''}</div>`;
     } else if (resolved) {
-      info = `<div class="entry-card-resolved">✓ Resolved</div>`;
+      info = `<div class="entry-card-info entry-card-resolved">✓ Resolved</div>`;
     }
 
     card.innerHTML = `
       <div class="entry-card-header">
         <span class="entry-card-title">${esc(g.title)}</span>
-        <span class="badge ${badgeClass}">${badgeText}</span>
+        <span class="badge ${badgeCls}">${badgeTxt}</span>
       </div>
       ${g.username ? `<div class="entry-card-user">${esc(g.username)}</div>` : ''}
       ${info}
     `;
-
-    card.addEventListener('click', () => {
-      selectedGroup = i;
-      editingCell = null;
-      renderEntryList();
-      renderComparison();
-    });
-
-    entryList.appendChild(card);
+    card.addEventListener('click', () => { selectedGroup = i; editingCell = null; renderEntryList(); renderComparison(); });
+    el.appendChild(card);
   });
 }
 
 function renderComparison() {
+  const panel = $('#compare-panel');
   if (groups.length === 0) {
-    comparePanel.innerHTML = '<p style="text-align:center;color:var(--gray);padding:80px">No entries</p>';
+    panel.innerHTML = '<div class="empty-compare">No entries</div>';
     return;
   }
-
   const g = groups[selectedGroup];
-  if (!g) return;
+  if (!g) { panel.innerHTML = '<div class="empty-compare">No entries</div>'; return; }
 
   const conflicts = g.has_conflicts;
   const resolved = g.resolved_source !== null;
   const numFiles = g.entries.length;
+  const conflictingFields = getConflictingFields(g);
 
+  // File labels with color indicator
   const seen = {};
   const fileLabels = g.entries.map(([fi]) => {
     const name = files[fi]?.name || `File ${fi}`;
@@ -239,6 +279,7 @@ function renderComparison() {
     return total > 1 ? `${name} (${nth})` : name;
   });
 
+  // Extra fields
   const standardKeys = new Set([
     'title','username','password','url','notes','created_at','updated_at',
     'created','updated','login_username','login_password','login_uri','login_name',
@@ -252,69 +293,70 @@ function renderComparison() {
   let html = '';
 
   // Header
-  html += `<div class="compare-header">`;
-  html += `<h2>${esc(g.title)}</h2>`;
+  html += `<div class="compare-header"><h2>${esc(g.title)}</h2>`;
   if (g.username) html += `<span class="username">(${esc(g.username)})</span>`;
-  if (conflicts) {
-    html += `<span class="badge badge-conflicts">⚠ Conflicts</span>`;
-  } else if (numFiles > 1) {
-    html += `<span class="badge badge-synced">✓ Synced</span>`;
-  }
+  if (conflicts) html += `<span class="badge badge-conflicts">⚠ Conflicts</span>`;
+  else if (numFiles > 1) html += `<span class="badge badge-synced">✓ Synced</span>`;
+  html += `<div class="right">`;
   if (numFiles > 1) {
-    html += `<div class="right"><button class="btn" id="toggle-pw">
-      <i class="ph ${showPasswords ? 'ph-eye-slash' : 'ph-eye'}"></i> Passwords
-    </button></div>`;
+    html += `<button class="btn" id="toggle-pw" title="Press P"><i class="ph ${showPasswords ? 'ph-eye-slash' : 'ph-eye'}"></i></button>`;
+    html += `<button class="btn" id="toggle-fields" title="Press T">${showAllFields ? '◆ All fields' : '◇ Diff only'}</button>`;
   }
-  html += `</div>`;
+  html += `</div></div>`;
 
   // Grid
   html += `<div class="compare-grid">`;
   g.entries.forEach(([fileIdx, entry], globalIdx) => {
     const isResolved = resolved && globalIdx === g.resolved_source;
-    const isResolvedBox = isResolved && conflicts;
-    let boxClass = 'entry-box';
-    if (isResolvedBox) boxClass += ' resolved';
-    else if (conflicts) boxClass += ' conflict';
-    else if (resolved) boxClass += ' has-resolved';
-    else boxClass += ' normal';
+    const isSelected = isResolved && conflicts;
 
-    html += `<div class="${boxClass}">`;
+    let boxCls = 'entry-box';
+    if (isSelected) boxCls += ' resolved-selected';
+
+    const chipColor = FILE_COLORS[fileIdx % FILE_COLORS.length];
+
+    html += `<div class="${boxCls}">`;
     html += `<div class="entry-box-header">`;
-    if (isResolvedBox) html += `<i class="ph ph-check check-icon"></i> `;
+    if (isSelected) html += `<i class="ph ph-check check-icon"></i>`;
+    html += `<span class="${chipColor}" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px"></span>`;
     html += `${esc(fileLabels[globalIdx])}</div>`;
 
-    FIELDS.forEach((field) => {
+    const fieldsToShow = showAllFields ? FIELDS : FIELDS.filter(f => conflictingFields.has(f));
+
+    fieldsToShow.forEach(field => {
       const val = entry[field.toLowerCase().replace(' ', '_')] || '';
-      const isEditing = editingCell
-        && editingCell.groupIdx === selectedGroup
-        && editingCell.fileIdx === globalIdx
-        && editingCell.field === field;
-      const isPassword = field === 'Password';
-      const editable = ['Username', 'Password', 'URL', 'Notes'].includes(field);
+      const isEditing = editingCell && editingCell.groupIdx === selectedGroup && editingCell.fileIdx === globalIdx && editingCell.field === field;
+      const isPw = field === 'Password';
+      const isConflictField = conflictingFields.has(field);
+
+      let rowCls = 'field-row';
+      if (isConflictField && conflicts) rowCls += ' conflict';
+      if (isSelected && isConflictField) rowCls += ' resolved';
 
       let valueHtml = '';
       if (isEditing) {
-        valueHtml = `
-          <div class="field-edit">
-            <input type="text" class="edit-input" data-group="${selectedGroup}" data-file="${globalIdx}" data-field="${field}" value="${esc(val)}">
-            <button class="btn btn-green edit-done" data-group="${selectedGroup}" data-file="${globalIdx}" data-field="${field}">✓</button>
-          </div>`;
+        valueHtml = `<div class="field-edit">
+          <input type="text" class="edit-input" id="edit-input"
+            data-group="${selectedGroup}" data-file="${globalIdx}" data-field="${field}"
+            value="${esc(val)}">
+          <button class="btn edit-done" data-group="${selectedGroup}" data-file="${globalIdx}" data-field="${field}">✓</button>
+        </div>`;
       } else {
         let displayVal = val;
-        let valClass = 'field-value';
-        if (isPassword && !showPasswords && val) displayVal = '••••••••';
-        else if (!val) { displayVal = '—'; valClass += ' empty'; }
-        else if (isResolvedBox) valClass += ' resolved-val';
-        else if (resolved) valClass += ' dimmed';
+        let valCls = 'field-value';
+        if (isPw && !showPasswords && val) displayVal = '••••••••';
+        else if (!val) { displayVal = '—'; valCls += ' empty'; }
+        else if (isSelected) valCls += ' resolved-val';
+        else if (resolved) valCls += ' dimmed';
 
         let editBtn = '';
-        if (editable && val) {
+        if (['Username', 'Password', 'URL', 'Notes'].includes(field) && val) {
           editBtn = `<i class="ph ph-pencil-simple edit-icon" data-group="${selectedGroup}" data-file="${globalIdx}" data-field="${field}"></i>`;
         }
-        valueHtml = `${editBtn}<span class="${valClass}">${esc(displayVal)}</span>`;
+        valueHtml = `${editBtn}<span class="${valCls}">${esc(displayVal)}</span>`;
       }
 
-      html += `<div class="field-row">
+      html += `<div class="${rowCls}">
         <span class="field-label"><i class="ph ${FIELD_ICONS[field]}"></i> ${field}</span>
         ${valueHtml}
       </div>`;
@@ -333,8 +375,7 @@ function renderComparison() {
     </div>`;
     html += `<div class="extra-fields-content" id="extra-content" style="display:none">`;
     extras.forEach(key => {
-      html += `<div class="extra-field-row">
-        <span class="extra-field-name">${esc(key)}</span>`;
+      html += `<div class="extra-field-row"><span class="extra-field-name">${esc(key)}</span>`;
       g.entries.forEach(([, e]) => {
         const v = e.raw?.[key] || '—';
         html += `<span style="flex:1;text-align:right">${esc(v)}</span>`;
@@ -346,86 +387,91 @@ function renderComparison() {
 
   // Resolved footer
   if (resolved && numFiles > 1) {
-    const resolvedIdx = g.entries.findIndex(([i]) => i === g.resolved_source);
-    const resolvedLabel = resolvedIdx >= 0 ? fileLabels[resolvedIdx] : '';
+    const ri = g.entries.findIndex(([i]) => i === g.resolved_source);
+    const rl = ri >= 0 ? fileLabels[ri] : '';
     html += `<div class="resolved-footer">
       <span>Resolved from</span>
-      <span class="resolved-source">${esc(resolvedLabel)}</span>
+      <span class="resolved-source">${esc(rl)}</span>
       <button class="clear-btn" id="clear-resolve">Clear</button>
     </div>`;
   }
 
-  comparePanel.innerHTML = html;
+  panel.innerHTML = html;
   bindCompareEvents();
 }
 
 function bindCompareEvents() {
-  const togglePw = $('#toggle-pw');
-  if (togglePw) togglePw.addEventListener('click', () => { showPasswords = !showPasswords; renderComparison(); });
+  $('#toggle-pw')?.addEventListener('click', () => { showPasswords = !showPasswords; renderComparison(); });
+  $('#toggle-fields')?.addEventListener('click', () => { showAllFields = !showAllFields; renderComparison(); });
 
   document.querySelectorAll('.keep-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       await invoke('resolve_group', { groupIdx: +btn.dataset.group, entryFileIdx: +btn.dataset.file });
       groups = await invoke('get_groups');
+      toast('Resolved!', 'success');
       renderEntryList();
       renderComparison();
     });
   });
 
+  // Edit icons
   document.querySelectorAll('.edit-icon').forEach(icon => {
-    icon.addEventListener('click', () => {
+    icon.addEventListener('click', (e) => {
+      e.stopPropagation();
       editingCell = { groupIdx: +icon.dataset.group, fileIdx: +icon.dataset.file, field: icon.dataset.field };
       renderComparison();
-      const input = comparePanel.querySelector('.edit-input');
+      const input = document.getElementById('edit-input');
       if (input) { input.focus(); input.select(); }
     });
   });
 
+  // Done buttons
   document.querySelectorAll('.edit-done').forEach(btn => {
-    btn.addEventListener('click', () => commitEdit(+btn.dataset.group, +btn.dataset.file, btn.dataset.field));
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const gIdx = +btn.dataset.group;
+      const fIdx = +btn.dataset.file;
+      const field = btn.dataset.field;
+      const input = document.getElementById('edit-input');
+      if (!input) return;
+      await invoke('edit_field', { groupIdx: gIdx, entryFileIdx: fIdx, field, value: input.value });
+      groups = await invoke('get_groups');
+      editingCell = null;
+      renderEntryList();
+      renderComparison();
+    });
   });
 
+  // Enter/Escape on inputs
   document.querySelectorAll('.edit-input').forEach(input => {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') commitEdit(+input.dataset.group, +input.dataset.file, input.dataset.field);
+    input.addEventListener('keydown', async (e) => {
+      e.stopPropagation();
+      if (e.key === 'Enter') {
+        const gIdx = +input.dataset.group;
+        const fIdx = +input.dataset.file;
+        const field = input.dataset.field;
+        await invoke('edit_field', { groupIdx: gIdx, entryFileIdx: fIdx, field, value: input.value });
+        groups = await invoke('get_groups');
+        editingCell = null;
+        renderEntryList();
+        renderComparison();
+      }
       if (e.key === 'Escape') { editingCell = null; renderComparison(); }
     });
   });
 
-  const extraToggle = $('#extra-toggle');
-  const extraContent = $('#extra-content');
-  if (extraToggle && extraContent) {
-    extraToggle.addEventListener('click', () => {
-      const visible = extraContent.style.display !== 'none';
-      extraContent.style.display = visible ? 'none' : '';
-      extraToggle.querySelector('span').textContent = visible ? '▶' : '▼';
-    });
-  }
+  $('#extra-toggle')?.addEventListener('click', () => {
+    const c = $('#extra-content');
+    const vis = c.style.display !== 'none';
+    c.style.display = vis ? 'none' : '';
+    $('#extra-toggle span:last-child').textContent = vis ? '▶' : '▼';
+  });
 
-  const clearBtn = $('#clear-resolve');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', async () => {
-      await invoke('clear_resolve', { groupIdx: selectedGroup });
-      groups = await invoke('get_groups');
-      renderEntryList();
-      renderComparison();
-    });
-  }
-}
-
-async function commitEdit(groupIdx, fileIdx, field) {
-  const input = comparePanel.querySelector(`.edit-input[data-group="${groupIdx}"][data-file="${fileIdx}"][data-field="${field}"]`);
-  if (!input) return;
-  await invoke('edit_field', { groupIdx, entryFileIdx: fileIdx, field, value: input.value });
-  groups = await invoke('get_groups');
-  editingCell = null;
-  renderEntryList();
-  renderComparison();
-}
-
-function esc(s) {
-  if (!s) return '';
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+  $('#clear-resolve')?.addEventListener('click', async () => {
+    await invoke('clear_resolve', { groupIdx: selectedGroup });
+    groups = await invoke('get_groups');
+    toast('Resolve cleared', 'info');
+    renderEntryList();
+    renderComparison();
+  });
 }
