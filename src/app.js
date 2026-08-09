@@ -243,12 +243,11 @@ function renderComparison() {
 
       let valueHtml = '';
       if (isEditing) {
-        valueHtml = `<div class="field-edit">
+        valueHtml = `
           <input type="text" class="edit-input" id="edit-input"
             data-group="${selectedGroup}" data-file="${gi}" data-field="${field}" value="${esc(val)}">
-          <button class="btn edit-save" data-group="${selectedGroup}" data-file="${gi}" data-field="${field}">${icon('check')} Save</button>
-          <button class="btn edit-cancel">${icon('x')}</button>
-        </div>`;
+          <button class="edit-action-btn" data-group="${selectedGroup}" data-file="${gi}" data-field="${field}" title="Save">${icon('check')}</button>
+          <button class="edit-action-btn edit-cancel" title="Cancel">${icon('x')}</button>`;
       } else {
         let displayVal = val;
         let valCls = 'field-value';
@@ -257,11 +256,11 @@ function renderComparison() {
         else if (isSelBox) valCls += ' resolved-val';
         else if (resolved) valCls += ' dimmed';
 
-        let editBtn = '';
+        let actionBtn = '';
         if (['Username', 'Password', 'URL', 'Notes'].includes(field)) {
-          editBtn = `<button class="edit-icon-btn" data-group="${selectedGroup}" data-file="${gi}" data-field="${field}" title="Edit">${icon('pencil')}</button>`;
+          actionBtn = `<button class="edit-action-btn" data-group="${selectedGroup}" data-file="${gi}" data-field="${field}" title="Edit">${icon('pencil')}</button>`;
         }
-        valueHtml = `${editBtn}<span class="${valCls}">${esc(displayVal)}</span>`;
+        valueHtml = `<span class="${valCls}">${esc(displayVal)}</span>${actionBtn}`;
       }
 
       h += `<div class="${rowCls}">
@@ -311,27 +310,32 @@ function bindCompareEvents() {
     });
   });
 
-  // Edit icons - use mousedown to fire before potential blur
-  document.querySelectorAll('.edit-icon-btn').forEach(btn => {
+  // Edit action buttons - pencil (start edit) or check (save) depending on mode
+  document.querySelectorAll('.edit-action-btn').forEach(btn => {
     btn.addEventListener('mousedown', (e) => {
       e.preventDefault();
-      editingCell = { groupIdx: +btn.dataset.group, fileIdx: +btn.dataset.file, field: btn.dataset.field };
-      renderComparison();
-      setTimeout(() => { const inp = document.getElementById('edit-input'); if (inp) { inp.focus(); inp.select(); } }, 0);
+      // If this is a pencil button (has data-group), start editing
+      if (btn.dataset.group !== undefined && !btn.classList.contains('edit-cancel')) {
+        editingCell = { groupIdx: +btn.dataset.group, fileIdx: +btn.dataset.file, field: btn.dataset.field };
+        renderComparison();
+        setTimeout(() => { const inp = document.getElementById('edit-input'); if (inp) { inp.focus(); inp.select(); } }, 0);
+      }
     });
   });
 
-  // Save button
-  document.querySelectorAll('.edit-save').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const inp = document.getElementById('edit-input');
-      if (!inp) return;
-      await invoke('edit_field', { groupIdx: +inp.dataset.group, entryFileIdx: +inp.dataset.file, field: inp.dataset.field, value: inp.value });
-      groups = await invoke('get_groups');
-      editingCell = null;
-      renderEntryList(); renderComparison();
-    });
+  // Save (check) button - delegated click on compare panel
+  $('#compare-panel').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.edit-action-btn:not(.edit-cancel)');
+    if (!btn) return;
+    // Only handle if we're in edit mode (check button appears)
+    if (!editingCell) return;
+    e.preventDefault();
+    const inp = document.getElementById('edit-input');
+    if (!inp) return;
+    await invoke('edit_field', { groupIdx: +inp.dataset.group, entryFileIdx: +inp.dataset.file, field: inp.dataset.field, value: inp.value });
+    groups = await invoke('get_groups');
+    editingCell = null;
+    renderEntryList(); renderComparison();
   });
 
   // Cancel button
