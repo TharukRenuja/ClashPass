@@ -72,6 +72,8 @@ echo "  Desktop entry -> $APPS_DIR/$DESKTOP"
 sudo gtk-update-icon-cache -f -t "$ICON_BASE" 2>/dev/null || true
 echo "  Icon cache updated"
 
+sudo chmod +x "$APPS_DIR/$DESKTOP"
+
 rm -rf "$TMPDIR"
 
 echo ""
