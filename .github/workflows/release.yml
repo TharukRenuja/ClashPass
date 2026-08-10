@@ -33,8 +33,8 @@ jobs:
       - name: Rename artifacts
         run: |
           cd src-tauri/target/release/bundle
-          mv deb/ClashPass_*.deb "clashpass-v${{ github.ref_name }}-x86-linux-installer.deb"
-          mv rpm/ClashPass-*.rpm "clashpass-v${{ github.ref_name }}-x86-linux-installer.rpm"
+          mv deb/ClashPass_*.deb "deb/clashpass-${{ github.ref_name }}-x86-linux-installer.deb"
+          mv rpm/ClashPass-*.rpm "rpm/clashpass-${{ github.ref_name }}-x86-linux-installer.rpm"
 
       - name: Create portable tarball
         run: |
@@ -46,7 +46,7 @@ jobs:
             cp "../../../icons/${size}x${size}.png" tarball/icons/
           done
           cd tarball
-          tar czf "../clashpass-v${{ github.ref_name }}-x86-linux.tar.gz" .
+          tar czf "../clashpass-${{ github.ref_name }}-x86-linux.tar.gz" .
           cd ..
           rm -rf tarball
 
@@ -81,8 +81,8 @@ jobs:
       - name: Rename artifacts
         run: |
           cd src-tauri/target/release/bundle
-          mv deb/ClashPass_*.deb "clashpass-v${{ github.ref_name }}-arm-linux-installer.deb"
-          mv rpm/ClashPass-*.rpm "clashpass-v${{ github.ref_name }}-arm-linux-installer.rpm"
+          mv deb/ClashPass_*.deb "deb/clashpass-${{ github.ref_name }}-arm-linux-installer.deb"
+          mv rpm/ClashPass-*.rpm "rpm/clashpass-${{ github.ref_name }}-arm-linux-installer.rpm"
 
       - name: Create portable tarball
         run: |
@@ -94,7 +94,7 @@ jobs:
             cp "../../../icons/${size}x${size}.png" tarball/icons/
           done
           cd tarball
-          tar czf "../clashpass-v${{ github.ref_name }}-arm-linux.tar.gz" .
+          tar czf "../clashpass-${{ github.ref_name }}-arm-linux.tar.gz" .
           cd ..
           rm -rf tarball
 
@@ -127,8 +127,8 @@ jobs:
           $tag = "${{ github.ref_name }}"
           $nsis = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.exe" | Select-Object -First 1
           $msi = Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Filter "*.msi" | Select-Object -First 1
-          Copy-Item $nsis.FullName "src-tauri/target/release/bundle/nsis/clashpass-v${tag}-x86-windows-installer.exe"
-          Copy-Item $msi.FullName "src-tauri/target/release/bundle/msi/clashpass-v${tag}-x86-windows-installer.msi"
+          Copy-Item $nsis.FullName "src-tauri/target/release/bundle/nsis/clashpass-${tag}-x86-windows-installer.exe"
+          Copy-Item $msi.FullName "src-tauri/target/release/bundle/msi/clashpass-${tag}-x86-windows-installer.msi"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -157,7 +157,7 @@ jobs:
       - name: Rename artifacts
         run: |
           cd src-tauri/target/x86_64-apple-darwin/release/bundle/dmg
-          mv ClashPass_*.dmg "clashpass-v${{ github.ref_name }}-intel-macos-installer.dmg"
+          mv ClashPass_*.dmg "clashpass-${{ github.ref_name }}-intel-macos-installer.dmg"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -184,7 +184,7 @@ jobs:
       - name: Rename artifacts
         run: |
           cd src-tauri/target/aarch64-apple-darwin/release/bundle/dmg
-          mv ClashPass_*.dmg "clashpass-v${{ github.ref_name }}-silicon-macos-installer.dmg"
+          mv ClashPass_*.dmg "clashpass-${{ github.ref_name }}-silicon-macos-installer.dmg"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
