@@ -93,12 +93,7 @@ $('#btn-import-empty').addEventListener('click', pickFiles);
 $('#btn-export').addEventListener('click', handleExport);
 $('#conflicts-only').addEventListener('change', (e) => { showConflictsOnly = e.target.checked; renderEntryList(); });
 $('#search').addEventListener('input', (e) => { searchQuery = e.target.value; renderEntryList(); });
-$('#entry-list').addEventListener('click', (e) => {
-  const card = e.target.closest('.entry-card');
-  if (card) {
-    selectEntry(+card.dataset.groupIndex);
-  }
-});
+// click handlers are attached directly to cards in renderEntryList()
 
 listen('tauri://drag-drop', async (event) => {
   const paths = event.payload.paths.filter(p => p.endsWith('.csv'));
@@ -180,6 +175,7 @@ function renderEntryList() {
     card.className = 'entry-card' + (isSel ? ' selected' : '');
     card.dataset.groupIndex = String(i);
     card.innerHTML = `<div class="entry-card-header"><span class="entry-card-title">${esc(g.title)}</span><span class="badge ${bCls}">${bTxt}</span></div>${g.username ? `<div class="entry-card-user">${esc(g.username)}</div>` : ''}${info}`;
+    card.addEventListener('click', () => selectEntry(i));
     el.appendChild(card);
   });
 }
@@ -188,11 +184,7 @@ function selectEntry(idx) {
   if (idx === selectedGroup) return;
   selectedGroup = idx;
   editingCell = null;
-  const el = $('#entry-list');
-  const cards = el.querySelectorAll('.entry-card');
-  cards.forEach(c => {
-    c.classList.toggle('selected', +c.dataset.groupIndex === selectedGroup);
-  });
+  renderEntryList();
   renderComparison();
 }
 
@@ -292,7 +284,7 @@ function renderComparison() {
       </div>`;
     });
 
-    h += `<button class="keep-btn" data-group="${selectedGroup}" data-file="${fileIdx}">${icon('check')} Keep</button></div>`;
+    h += `<button class="keep-btn" data-group="${selectedGroup}" data-file="${gi}">${icon('check')} Keep</button></div>`;
   });
   h += `</div>`;
 
@@ -313,8 +305,7 @@ function renderComparison() {
   // Resolved footer in separate fixed div
   const footerEl = $('#resolved-footer');
   if (resolved && numFiles > 1) {
-    const ri = g.entries.findIndex(([i]) => i === g.resolved_source);
-    const rl = ri >= 0 ? fileLabels[ri] : '';
+    const rl = g.resolved_source !== null ? fileLabels[g.resolved_source] : '';
     footerEl.innerHTML = `<span>Resolved from</span><span class="resolved-source">${esc(rl)}</span><button class="clear-btn" id="clear-resolve">${icon('x-circle')} Clear</button>`;
     footerEl.style.display = '';
   } else {
@@ -332,7 +323,7 @@ function bindCompareEvents() {
 
   document.querySelectorAll('.keep-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await invoke('resolve_group', { groupIdx: +btn.dataset.group, entryFileIdx: +btn.dataset.file });
+      await invoke('resolve_group', { groupIdx: +btn.dataset.group, entryIdx: +btn.dataset.file });
       groups = await invoke('get_groups');
       toast('Resolved!', 'success');
       renderEntryList(); renderComparison();

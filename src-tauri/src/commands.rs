@@ -61,10 +61,10 @@ pub fn get_groups(state: tauri::State<'_, Mutex<AppState>>) -> Result<Vec<EntryG
 }
 
 #[tauri::command]
-pub fn resolve_group(group_idx: usize, entry_file_idx: usize, state: tauri::State<'_, Mutex<AppState>>) -> Result<(), String> {
+pub fn resolve_group(group_idx: usize, entry_idx: usize, state: tauri::State<'_, Mutex<AppState>>) -> Result<(), String> {
     let mut state = state.lock().map_err(|e| e.to_string())?;
     if let Some(group) = state.groups.get_mut(group_idx) {
-        group.resolved_source = Some(entry_file_idx);
+        group.resolved_source = Some(entry_idx);
     }
     Ok(())
 }

@@ -64,10 +64,7 @@ pub fn export_to_csv(groups: &[EntryGroup], path: &str) -> Result<(), String> {
 
     for group in groups {
         let entry = match group.resolved_source {
-            Some(file_idx) => {
-                let found = group.entries.iter().find(|(i, _)| *i == file_idx);
-                found.map(|(_, e)| e)
-            }
+            Some(idx) => group.entries.get(idx).map(|(_, e)| e),
             None => group.entries.first().map(|(_, e)| e),
         };
 
