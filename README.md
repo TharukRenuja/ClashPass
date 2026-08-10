@@ -14,10 +14,7 @@
     <img src="https://img.shields.io/github/v/release/TharukRenuja/ClashPass?style=for-the-badge&color=e94560" alt="Version">
   </a>
   <a href="https://github.com/TharukRenuja/ClashPass/releases/latest">
-    <img src="https://img.shields.io/github/repo-size/TharukRenuja/ClashPass?style=for-the-badge&color=555555" alt="Repo Size">
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-5cb870?style=for-the-badge" alt="License">
+    <img src="https://img.shields.io/github/repo-size/TharukRenuja/ClashPass?style=for-the-badge&color=55555" alt="Repo Size">
   </a>
   <a href="https://github.com/TharukRenuja/ClashPass/releases">
     <img src="https://img.shields.io/github/downloads/TharukRenuja/ClashPass/total?style=for-the-badge&color=5b8fd6" alt="Downloads">
