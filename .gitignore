@@ -1,7 +1,6 @@
 # Build output
 /target
 /dist
-node_modules/
 
 # Tauri
 src-tauri/target/

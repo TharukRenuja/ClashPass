@@ -5,10 +5,10 @@ APP := clashpass
 all: release
 
 dev:
-	npx tauri dev
+	cargo tauri dev
 
 release:
-	npx tauri build
+	cargo tauri build
 
 run: dev
 

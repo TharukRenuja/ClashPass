@@ -101,11 +101,10 @@ Download `clashpass-v*-macos-*.dmg` from [Releases](https://github.com/TharukRen
 
 ### Build from source
 
-Requires [Rust](https://rustup.rs/) (1.75+) and [Node.js](https://nodejs.org/) (18+).
+Requires [Rust](https://rustup.rs/) (1.75+).
 
 ```bash
 git clone https://github.com/TharukRenuja/ClashPass.git
 cd ClashPass
-npm install
 cargo tauri build
 ```
