@@ -11,18 +11,29 @@
 
 <p align="center">
   <a href="https://github.com/TharukRenuja/ClashPass/releases/latest">
-    <img src="https://img.shields.io/github/v/release/TharukRenuja/ClashPass?style=flat-square&color=blue" alt="Version">
+    <img src="https://img.shields.io/github/v/release/TharukRenuja/ClashPass?style=for-the-badge&color=e94560" alt="Version">
   </a>
   <a href="https://github.com/TharukRenuja/ClashPass/releases/latest">
-    <img src="https://img.shields.io/github/repo-size/TharukRenuja/ClashPass?style=flat-square" alt="Repo Size">
+    <img src="https://img.shields.io/github/repo-size/TharukRenuja/ClashPass?style=for-the-badge&color=555555" alt="Repo Size">
   </a>
   <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
+    <img src="https://img.shields.io/badge/license-MIT-5cb870?style=for-the-badge" alt="License">
   </a>
-  <a href="https://github.com/TharukRenuja/ClashPass/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/TharukRenuja/ClashPass/release.yml?style=flat-square&label=build" alt="Build">
+  <a href="https://github.com/TharukRenuja/ClashPass/releases">
+    <img src="https://img.shields.io/github/downloads/TharukRenuja/ClashPass/total?style=for-the-badge&color=5b8fd6" alt="Downloads">
   </a>
-  <img src="https://img.shields.io/badge/platform-linux%20%7C%20windows%20%7C%20macos-lightgrey?style=flat-square" alt="Platform">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Linux-x86_%7C_arm-FCC624?style=for-the-badge&logo=linux&logoColor=white" alt="Linux">
+  <img src="https://img.shields.io/badge/Windows-x86-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
+  <img src="https://img.shields.io/badge/macOS-Intel_%7C_Silicon-A2AAAD?style=for-the-badge&logo=apple&logoColor=white" alt="macOS">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Built_with-Tauri_v2-FFC131?style=for-the-badge&logo=tauri&logoColor=black" alt="Tauri">
+  <img src="https://img.shields.io/badge/Language-Rust-DEA584?style=for-the-badge&logo=rust&logoColor=white" alt="Rust">
+  <img src="https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-E44D26?style=for-the-badge" alt="Frontend">
 </p>
 
 ---
@@ -71,6 +82,9 @@ This detects your architecture (x86/arm), downloads the latest release, and inst
 
 #### Manual install from tarball
 
+<details>
+<summary>Install manually from tarball</summary>
+
 Download the tarball from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest):
 
 ```bash
@@ -101,6 +115,8 @@ EOF
 sudo gtk-update-icon-cache -f -t /usr/share/icons/hicolor
 ```
 
+</details>
+
 ### Windows
 
 Download `clashpass-v*-x86-windows-installer.exe` from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest) and run it.
@@ -109,7 +125,7 @@ Download `clashpass-v*-x86-windows-installer.exe` from [Releases](https://github
 
 Download the appropriate DMG from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest):
 
-- **Apple Silicon** (M1/M2/M3/M4): `clashpass-v*-silicon-macos-installer.dmg`
+- **Apple Silicon**: `clashpass-v*-silicon-macos-installer.dmg`
 - **Intel**: `clashpass-v*-intel-macos-installer.dmg`
 
 Open the DMG and drag to Applications.
