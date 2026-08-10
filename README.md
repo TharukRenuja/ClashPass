@@ -61,43 +61,58 @@ Toggle **"Show conflicts only"** to focus on mismatches and **"Files"** to manag
 
 ### Linux
 
-#### Method 1: (Using `install.sh`)
+#### One-line install (recommended)
 
-Using **Curl**:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/TharukRenuja/ClashPass/main/install.sh | sh
 ```
 
-#### Method 2: (Manual Installation)
+This detects your architecture (x86/arm), downloads the latest release, and installs the binary to `/usr/local/bin/`, desktop entry, and system icons.
 
-<details>
-<summary>Install manually using tarball</summary>
+#### Manual install from tarball
 
-Download the tarball from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest), then:
+Download the tarball from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest):
 
 ```bash
-tar xzf clashpass-v*-linux-amd64.tar.gz
-cd clashpass-v*
-./clashpass          # Auto-installs to ~/.local/bin/ and adds to start menu
+# x86_64
+tar xzf clashpass-v*-x86-linux.tar.gz
+sudo cp clashpass /usr/local/bin/
+sudo chmod +x /usr/local/bin/clashpass
+
+# Install icons
+for size in 16 32 128 256; do
+  sudo mkdir -p /usr/share/icons/hicolor/${size}x${size}/apps
+  sudo cp icons/${size}x${size}.png /usr/share/icons/hicolor/${size}x${size}/apps/clashpass.png
+done
+
+# Create desktop entry
+sudo tee /usr/share/applications/clashpass.desktop > /dev/null << EOF
+[Desktop Entry]
+Name=ClashPass
+Comment=Password Conflict Resolver
+Exec=/usr/local/bin/clashpass
+Icon=clashpass
+Type=Application
+Categories=Utility;Security;PasswordManager;
+Terminal=false
+StartupNotify=true
+EOF
+
+sudo gtk-update-icon-cache -f -t /usr/share/icons/hicolor
 ```
-
-That's it. The binary installs itself on first run — desktop entry, icon, and PATH. After that, just launch `clashpass` from your app launcher.
-
-Other commands (After Installation):
-```bash
-clashpass --install     # Manual reinstall
-clashpass --uninstall   # Remove binary, desktop entry, and icon
-```
-
-</details>
 
 ### Windows
 
-Download `clashpass-v*-windows-amd64.exe` from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest) and run it.
+Download `clashpass-v*-x86-windows-installer.exe` from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest) and run it.
 
 ### macOS
 
-Download `clashpass-v*-macos-*.dmg` from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest), open the DMG, and drag to Applications.
+Download the appropriate DMG from [Releases](https://github.com/TharukRenuja/ClashPass/releases/latest):
+
+- **Apple Silicon** (M1/M2/M3/M4): `clashpass-v*-silicon-macos-installer.dmg`
+- **Intel**: `clashpass-v*-intel-macos-installer.dmg`
+
+Open the DMG and drag to Applications.
 
 ### Build from source
 
@@ -107,4 +122,9 @@ Requires [Rust](https://rustup.rs/) (1.75+).
 git clone https://github.com/TharukRenuja/ClashPass.git
 cd ClashPass
 cargo tauri build
+```
+
+On Wayland, if the window doesn't render:
+```bash
+WEBKIT_DISABLE_COMPOSITING_MODE=1 GDK_BACKEND=wayland cargo tauri dev
 ```

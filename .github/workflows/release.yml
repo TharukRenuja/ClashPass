@@ -41,7 +41,6 @@ jobs:
           cd src-tauri/target/release
           mkdir -p tarball/icons
           cp clashpass tarball/
-          cp ../../../install.sh tarball/
           for size in 16 32 128 256; do
             cp "../../../icons/${size}x${size}.png" tarball/icons/
           done
@@ -89,7 +88,6 @@ jobs:
           cd src-tauri/target/release
           mkdir -p tarball/icons
           cp clashpass tarball/
-          cp ../../../install.sh tarball/
           for size in 16 32 128 256; do
             cp "../../../icons/${size}x${size}.png" tarball/icons/
           done
