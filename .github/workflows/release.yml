@@ -41,9 +41,9 @@ jobs:
           cd src-tauri/target/release
           mkdir -p tarball/icons
           cp clashpass tarball/
-          cp ../../../../install.sh tarball/
+          cp ../../../install.sh tarball/
           for size in 16 32 128 256; do
-            cp "../../../../icons/${size}x${size}.png" tarball/icons/
+            cp "../../../icons/${size}x${size}.png" tarball/icons/
           done
           cd tarball
           tar czf "../clashpass-v${{ github.ref_name }}-x86-linux.tar.gz" .
@@ -89,9 +89,9 @@ jobs:
           cd src-tauri/target/release
           mkdir -p tarball/icons
           cp clashpass tarball/
-          cp ../../../../install.sh tarball/
+          cp ../../../install.sh tarball/
           for size in 16 32 128 256; do
-            cp "../../../../icons/${size}x${size}.png" tarball/icons/
+            cp "../../../icons/${size}x${size}.png" tarball/icons/
           done
           cd tarball
           tar czf "../clashpass-v${{ github.ref_name }}-arm-linux.tar.gz" .
