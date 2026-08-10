@@ -27,12 +27,6 @@
   <img src="https://img.shields.io/badge/macOS-Intel_%7C_Silicon-A2AAAD?style=for-the-badge&logo=apple&logoColor=white" alt="macOS">
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Built_with-Tauri_v2-FFC131?style=for-the-badge&logo=tauri&logoColor=black" alt="Tauri">
-  <img src="https://img.shields.io/badge/Language-Rust-DEA584?style=for-the-badge&logo=rust&logoColor=white" alt="Rust">
-  <img src="https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-E44D26?style=for-the-badge" alt="Frontend">
-</p>
-
 ---
 
 ## Features
