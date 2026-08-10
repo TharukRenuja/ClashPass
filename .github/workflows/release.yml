@@ -35,8 +35,8 @@ jobs:
           TAG="${{ github.ref_name }}"
           mkdir -p staging
           cd src-tauri/target/release/bundle
-          cp "deb/ClashPass_*.deb" "$GITHUB_WORKSPACE/staging/clashpass-${TAG}-x86-linux-installer.deb"
-          cp "rpm/ClashPass-*.rpm" "$GITHUB_WORKSPACE/staging/clashpass-${TAG}-x86-linux-installer.rpm"
+          cp deb/ClashPass_*.deb "$GITHUB_WORKSPACE/staging/clashpass-${TAG}-x86-linux-installer.deb"
+          cp rpm/ClashPass-*.rpm "$GITHUB_WORKSPACE/staging/clashpass-${TAG}-x86-linux-installer.rpm"
           cd "$GITHUB_WORKSPACE/src-tauri/target/release"
           mkdir -p tarball/icons
           cp clashpass tarball/
@@ -76,8 +76,8 @@ jobs:
           TAG="${{ github.ref_name }}"
           mkdir -p staging
           cd src-tauri/target/release/bundle
-          cp "deb/ClashPass_*.deb" "$GITHUB_WORKSPACE/staging/clashpass-${TAG}-arm-linux-installer.deb"
-          cp "rpm/ClashPass-*.rpm" "$GITHUB_WORKSPACE/staging/clashpass-${TAG}-arm-linux-installer.rpm"
+          cp deb/ClashPass_*.deb "$GITHUB_WORKSPACE/staging/clashpass-${TAG}-arm-linux-installer.deb"
+          cp rpm/ClashPass-*.rpm "$GITHUB_WORKSPACE/staging/clashpass-${TAG}-arm-linux-installer.rpm"
           cd "$GITHUB_WORKSPACE/src-tauri/target/release"
           mkdir -p tarball/icons
           cp clashpass tarball/
