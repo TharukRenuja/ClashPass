@@ -112,9 +112,8 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           New-Item -ItemType Directory -Path staging -Force | Out-Null
-          $nsis = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*.exe" | Select-Object -First 1
+          Copy-Item "src-tauri/target/release/clashpass.exe" "staging/clashpass-${tag}-x86-windows-portable.exe"
           $msi = Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Filter "*.msi" | Select-Object -First 1
-          Copy-Item $nsis.FullName "staging/clashpass-${tag}-x86-windows-portable.exe"
           Copy-Item $msi.FullName "staging/clashpass-${tag}-x86-windows-installer.msi"
 
       - name: Upload Artifacts
