@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 mod commands;
 mod export;
 mod models;
